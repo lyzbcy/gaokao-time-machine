@@ -1,0 +1,29 @@
+# 依赖
+node_modules/
+
+# Windows 保留设备名残留（无法删除，需 git 忽略）
+nul
+
+# 临时验证脚本（下划线开头）
+_*.js
+
+# 下载的爬虫素材（不入库）
+downloads/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+
+# Supabase 凭据（切勿提交真实 key）
+# js/config/supabase.js 内部留空，填了真实 key 后请勿提交
+.env
+.env.local
+*.local
+
+# 日志
+*.log
+npm-debug.log*

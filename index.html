@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>高考分数时光机 · 你的分数放2026能上啥？</title>
+<meta name="description" content="输入你当年的高考分数，时光机算算放2026年能上什么学校。开盒你的专属称号，纯属娱乐。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="topbar">
+  <div class="brand" onclick="location.hash='#/'">
+    <img src="img/ui/logo.png" alt="logo" class="brand-logo" onerror="this.style.display='none'">
+    <span class="brand-name">高考分数时光机</span>
+  </div>
+  <nav class="nav-links">
+    <a href="#/">开盒</a>
+    <a href="#/ranking">排行榜</a>
+    <a href="#/collection">我的</a>
+  </nav>
+</header>
+
+<!-- 路由挂载点 -->
+<main id="app"></main>
+
+<!-- 数据来源声明（始终展示在底部） -->
+<footer class="disclaimer">
+  <details>
+    <summary>📊 数据与预测说明（点开看真相）</summary>
+    <div class="disclaimer-body" id="disclaimerBody">加载中…</div>
+  </details>
+  <p class="copyright">🎨 表情包友情出演：<b>星星布丁 · 捞鱼 · 周三涵</b> · 仅供娱乐，切勿当真</p>
+</footer>
+
+<!-- 全屏开盒特效层 -->
+<div id="box-overlay" class="box-overlay hidden">
+  <div class="box-stage">
+    <img id="box-emoji" class="box-emoji" src="" alt="">
+    <div id="box-shine" class="box-shine"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- 模块脚本（顺序很重要：config→data→modules→pages→app） -->
+<script src="js/config/supabase.js"></script>
+<script src="js/modules/predictor.js"></script>
+<script src="js/modules/labels.js"></script>
+<script src="js/modules/rank-converter.js"></script>
+<script src="js/modules/box-engine.js"></script>
+<script src="js/modules/trash-talk.js"></script>
+<script src="js/modules/share-card.js"></script>
+<script src="js/data/repository.js"></script>
+<script src="js/pages/home.js"></script>
+<script src="js/pages/result.js"></script>
+<script src="js/pages/ranking.js"></script>
+<script src="js/pages/collection.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

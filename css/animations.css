@@ -1,0 +1,162 @@
+/* ===========================================================
+   开盒动效 / 标签光效 / 隐藏款特效
+   =========================================================== */
+
+/* 标签卡光晕旋转 */
+@keyframes rotateGlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* 隐藏款呼吸光 */
+@keyframes hiddenGlow {
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(236,72,153,0.5); }
+  50%      { box-shadow: 0 0 24px 6px rgba(236,72,153,0.8); }
+}
+
+/* ---------- 全屏开盒遮罩层 ---------- */
+.box-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(45,20,60,0.88), rgba(15,5,25,0.96));
+  backdrop-filter: blur(6px);
+  opacity: 1;
+  transition: opacity .3s;
+}
+.box-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.box-stage {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.box-emoji {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(255,200,100,0.4));
+}
+
+/* 金光柱（SSR / 隐藏款） */
+.box-shine {
+  position: absolute;
+  inset: -60px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent 0deg,
+    rgba(255,215,0,0.6) 30deg,
+    transparent 60deg,
+    transparent 150deg,
+    rgba(255,215,0,0.6) 180deg,
+    transparent 210deg,
+    transparent 300deg,
+    rgba(255,215,0,0.6) 330deg,
+    transparent 360deg);
+  animation: rotateGlow 1.6s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+.box-shine.show { opacity: 1; }
+.box-shine.hidden-rainbow {
+  background: conic-gradient(from 0deg,
+    transparent, rgba(255,107,161,0.7), transparent,
+    rgba(155,107,255,0.7), transparent,
+    rgba(107,214,255,0.7), transparent);
+  opacity: 1;
+}
+
+/* 开盒动画序列阶段 */
+.box-emoji.stage-shake {
+  animation: boxShake .5s ease-in-out;
+}
+.box-emoji.stage-pulse {
+  animation: boxPulse .6s ease-out forwards;
+}
+.box-emoji.stage-pop {
+  animation: boxPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+@keyframes boxShake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) rotate(-4deg); }
+  20%, 40%, 60%, 80% { transform: translateX(8px) rotate(4deg); }
+}
+@keyframes boxPulse {
+  0%   { transform: scale(1); filter: drop-shadow(0 8px 20px rgba(255,200,100,0.4)) brightness(1); }
+  50%  { transform: scale(1.35); filter: drop-shadow(0 0 40px rgba(255,220,100,0.9)) brightness(1.5); }
+  100% { transform: scale(1.15); filter: drop-shadow(0 8px 24px rgba(255,200,100,0.6)) brightness(1.2); }
+}
+@keyframes boxPop {
+  0%   { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* 开盒遮罩文字（标签揭晓） */
+.box-reveal {
+  position: absolute;
+  bottom: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #fff;
+  white-space: nowrap;
+}
+.box-reveal .rarity-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  animation: revealFade .4s ease .2s both;
+}
+.box-reveal .title {
+  font-size: 30px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #FFD66B, #FF8A3D, #FF6FA1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: revealFade .5s ease .35s both;
+}
+@keyframes revealFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 标签卡入场 */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-in { animation: cardIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+
+/* 数字跳动 */
+@keyframes numberPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.2); color: var(--orange); }
+  100% { transform: scale(1); }
+}
+
+/* 进度条 / 柱状图填充由 .prob-bar-fill 的 width 动画处理 */
+
+/* 分享卡片画布 */
+.share-canvas-wrap {
+  margin-top: 16px;
+  text-align: center;
+}
+.share-canvas-wrap canvas {
+  max-width: 100%;
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+}

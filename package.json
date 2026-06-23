@@ -1,0 +1,11 @@
+{
+  "name": "gaokao-score-time-machine",
+  "version": "1.0.0",
+  "description": "高考分数时光机 — 把你当年的高考分数换算到2026年能上什么学校的娱乐网页（盲盒+预测）",
+  "private": true,
+  "scripts": {
+    "preview:local": "node local-preview-server.js",
+    "gen:data": "node generate-scores.js",
+    "gen:assets": "node copy-assets.js"
+  }
+}

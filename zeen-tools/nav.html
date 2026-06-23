@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>页面导航 - 高考分数时光机</title>
+<style>
+  :root {
+    --bg: #FFF9F3;
+    --card-bg: #ffffff;
+    --border: #EEE7F5;
+    --text: #2D2438;
+    --text-secondary: #6B6478;
+    --text-light: #9C95A8;
+    --primary: #9B6BFF;
+    --primary-light: #F3E8FF;
+    --orange: #FF8A3D;
+    --grad: linear-gradient(135deg, #FF8A3D 0%, #FF6FA1 50%, #9B6BFF 100%);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 18px 24px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(155,107,255,0.08);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .info {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .mode-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-switcher label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .mode-btn {
+    padding: 8px 18px;
+    border: 2px solid var(--border);
+    background: var(--card-bg);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: all .2s;
+  }
+  .mode-btn.active {
+    background: var(--grad);
+    color: #fff;
+    border-color: transparent;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    margin: 24px 0 14px;
+    color: var(--text);
+  }
+  .section-title::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    background: var(--grad);
+    border-radius: 2px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .nav-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .nav-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(155,107,255,0.15);
+  }
+  .nav-card .emoji {
+    font-size: 36px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .nav-card .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .nav-card .desc {
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.5;
+  }
+  .nav-card .path {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 2px 8px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: Consolas, monospace;
+  }
+  .note {
+    margin-top: 32px;
+    padding: 16px 20px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .note b { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🔮 高考分数时光机 · 页面导航</h1>
+    <div class="info">单页 SPA（hash 路由）· 4 个视图 · 共 1 个 index.html</div>
+  </div>
+  <div class="mode-switcher">
+    <label>预览模式：</label>
+    <button class="mode-btn active" id="modeNormal" onclick="setMode('normal')">普通</button>
+    <button class="mode-btn" id="modeMobile" onclick="setMode('mobile')">📱 Mobile</button>
+  </div>
+</div>
+
+<div class="section-title">📱 应用页面</div>
+<div class="card-grid" id="cardGrid">
+  <!-- 卡片由 JS 生成 -->
+</div>
+
+<div class="note">
+  <b>关于本导航页：</b><br>
+  • 这是一个单页应用（SPA），所有视图通过 <code>#/</code>、<code>#/result</code>、<code>#/ranking</code>、<code>#/collection</code> 等 hash 切换，物理上只有 <code>index.html</code> 一个文件。<br>
+  • <b>普通模式</b>：点击卡片在新标签页直接打开对应 hash 路由。<br>
+  • <b>📱 Mobile 模式</b>：点击卡片弹出一个 375×812 的手机视口窗口，内嵌 iframe 加载该路由，模拟手机端预览效果。<br>
+  • 数据未配置 Supabase 时，排行榜/图鉴使用 localStorage 本地数据，仍可完整体验。
+</div>
+
+<script>
+// 页面配置
+var PAGES = [
+  { emoji: '🏠', title: '首页 · 开盒', desc: '输入省份/年份/分数，点击开盒抽取你的专属标签', hash: '#/' },
+  { emoji: '🎁', title: '结果页', desc: '展示抽到的标签卡 + 对比表 + 骚话评价（需先在首页开盒）', hash: '#/result' },
+  { emoji: '🏆', title: '排行榜', desc: '稀有度排行 / 省份分布 / 内卷指数三个 tab', hash: '#/ranking' },
+  { emoji: '📜', title: '我的图鉴', desc: '标签收集图鉴墙 + 历史开盒记录', hash: '#/collection' }
+];
+
+var mode = 'normal';
+// baseUrl 自动适配：本地预览是根 /，GitHub Pages 子路径是 /gaokao-time-machine/
+// nav.html 在 zeen-tools/ 下，首页 index.html 在项目根，所以回到上级目录
+var baseUrl = location.href.replace(/\/zeen-tools\/[^/]*$/, '/');
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeNormal').classList.toggle('active', m === 'normal');
+  document.getElementById('modeMobile').classList.toggle('active', m === 'mobile');
+}
+
+function renderCards() {
+  var html = PAGES.map(function(p) {
+    return '<div class="nav-card" onclick="openPage(\'' + p.hash + '\')">' +
+      '<span class="emoji">' + p.emoji + '</span>' +
+      '<div class="title">' + p.title + '</div>' +
+      '<div class="desc">' + p.desc + '</div>' +
+      '<span class="path">' + p.hash + '</span>' +
+      '</div>';
+  }).join('');
+  document.getElementById('cardGrid').innerHTML = html;
+}
+
+function openPage(hash) {
+  var url = baseUrl + hash;
+  if (mode === 'mobile') {
+    openMobile(url, hash);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// Mobile 预览：弹出一个含 iframe 的手机外壳窗口
+function openMobile(url, hash) {
+  var w = 440, h = 880;
+  var left = (screen.width - w) / 2;
+  var top = (screen.height - h) / 2;
+  var win = window.open('', '_blank',
+    'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top +
+    ',menubar=no,toolbar=no,location=no,status=no');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>📱 Mobile 预览 ' + hash + '</title>' +
+    '<style>' +
+    'body{margin:0;padding:0;background:#1a1620;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;height:100vh;overflow:hidden}' +
+    '.toolbar{width:100%;padding:8px 12px;background:#2d2438;color:#fff;font-size:12px;display:flex;align-items:center;gap:8px;box-sizing:border-box}' +
+    '.toolbar .url{flex:1;font-family:Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}' +
+    '.toolbar button{background:#9B6BFF;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}' +
+    '.phone{flex:1;display:flex;align-items:center;justify-content:center;width:100%;overflow:hidden}' +
+    '.frame-wrap{width:375px;height:812px;border:8px solid #000;border-radius:36px;background:#000;box-shadow:0 0 0 2px #333,0 20px 40px rgba(0,0,0,.5);position:relative;overflow:hidden}' +
+    '.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:24px;background:#000;border-radius:0 0 16px 16px;z-index:2}' +
+    'iframe{width:100%;height:100%;border:none;background:#fff}' +
+    '</style></head><body>' +
+    '<div class="toolbar"><span>📱</span><span class="url">' + url + '</span>' +
+    '<button onclick="var f=document.querySelector(\\\'iframe\\\');f.src=f.src;">↻</button>' +
+    '<button onclick="window.open(\'' + url + '\',\'_blank\')">↗</button></div>' +
+    '<div class="phone"><div class="frame-wrap"><div class="notch"></div>' +
+    '<iframe src="' + url + '"></iframe></div></div>' +
+    '</body></html>';
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+renderCards();
+</script>
+
+</body>
+</html>
