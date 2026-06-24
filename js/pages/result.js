@@ -80,9 +80,9 @@ const ResultPage = (function () {
               <td><b style="color:var(--orange)">${result.newJudgeScore}</b> <span class="muted">等位专业分</span></td>
             </tr>` : ''}
             <tr>
-              <td><b>全省排名</b></td>
-              <td>第 ${(result.provinceRank || input.rank).toLocaleString()} 名</td>
-              <td>第 ${(result.provinceRank || input.rank).toLocaleString()} 名 <span class="muted">(同位次)</span></td>
+              <td><b>全省排名</b>${result.rankSource === 'estimated' ? '<br><span class="muted" style="font-size:10px">估算</span>' : ''}</td>
+              <td>第 ${(result.provinceRank || input.rank || 0).toLocaleString()} 名${result.rankSource === 'estimated' ? ' <span class="muted" style="font-size:10px">(按分估算)</span>' : ''}</td>
+              <td>第 ${(result.provinceRank || input.rank || 0).toLocaleString()} 名 <span class="muted">(同位次)</span></td>
             </tr>
             <tr>
               <td><b>科类</b></td>

@@ -28,9 +28,14 @@ const HomePage = (function () {
 
         <div class="input-row">
           <label>📅 高考年份 <span class="req">*</span></label>
-          <select class="select" id="f-year">
-            <option value="">选个年份</option>
-          </select>
+          <input class="input" id="f-year" list="yearList" autocomplete="off"
+                 type="number" min="1977" max="2026" placeholder="比如 2015（可直接输入任意年份）">
+          <datalist id="yearList">
+            <option value="2025"><option value="2024"><option value="2023"><option value="2022">
+            <option value="2021"><option value="2020"><option value="2019"><option value="2018">
+            <option value="2017"><option value="2016"><option value="2015"><option value="2010">
+            <option value="2005"><option value="2000"><option value="1995"><option value="1990">
+          </datalist>
         </div>
 
         <div class="input-row">
@@ -48,9 +53,9 @@ const HomePage = (function () {
         </div>
 
         <div class="input-row">
-          <label>🏅 当年全省排名 <span class="req">*</span></label>
-          <input class="input" id="f-rank" type="number" min="1" placeholder="比如 12000">
-          <span class="muted" style="font-size:11px">位次比分数更准（每年难度不同，分数会变但排名稳定）</span>
+          <label>🏅 当年全省排名 <span class="muted" style="font-size:11px">（选填，建议填写更准）</span></label>
+          <input class="input" id="f-rank" type="number" min="1" placeholder="忘了就空着，比如 12000">
+          <span class="muted" style="font-size:11px">位次比分数更准；不填会按分数自动估算位次（可能略有偏差）</span>
         </div>
 
         <div class="input-row">
@@ -118,15 +123,7 @@ const HomePage = (function () {
       opt.textContent = p.name;
       provSel.appendChild(opt);
     }
-
-    const yearSel = document.getElementById('f-year');
-    const years = SCORE_DATA._meta.years;
-    for (const y of years) {
-      const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = `${y} 年`;
-      yearSel.appendChild(opt);
-    }
+    // 年份已改为可输入框 + datalist（HTML 内置常用项），这里不再填充
   }
 
   function bindEvents() {
@@ -280,17 +277,19 @@ const HomePage = (function () {
     const year = parseInt(document.getElementById('f-year').value, 10);
     const track = document.getElementById('f-track').value;
     const score = parseInt(document.getElementById('f-score').value, 10);
-    const rank = parseInt(document.getElementById('f-rank').value, 10);
+    // 全省排名非必填：空则用分数反查当年位次（box-engine 内处理）
+    const rankRaw = document.getElementById('f-rank').value.trim();
+    const rank = rankRaw ? parseInt(rankRaw, 10) : undefined;
     const school = document.getElementById('f-school').value.trim() || undefined;
     const major = document.getElementById('f-major').value.trim() || undefined;
     const majorScore = parseInt(document.getElementById('f-majorScore').value, 10) || undefined;
     const custom2026 = parseInt(document.getElementById('f-custom2026').value, 10) || undefined;
 
     if (!prov) { App.toast('请先选省份～'); return null; }
-    if (!year) { App.toast('请选你的高考年份～'); return null; }
+    if (!year || year < 1977 || year > 2026) { App.toast('年份填得不对哦（1977-2026）～'); return null; }
     if (!track) { App.toast('请选科类（文理/物理历史/总分）～'); return null; }
     if (!score || score < 0 || score > 750) { App.toast('分数填得不对哦（0-750）～'); return null; }
-    if (!rank || rank < 1) { App.toast('请填全省排名（位次比分数更准）～'); return null; }
+    if (rank !== undefined && rank < 1) { App.toast('全省排名得是正数～'); return null; }
     // 自定义学校必须填 2026 预计分
     if (school && isCustomSchool(SCORE_DATA.provinces[prov], school) && (!custom2026 || custom2026 < 0 || custom2026 > 750)) {
       App.toast('你填的学校不在数据库，请补上「2026预计录取分」～');

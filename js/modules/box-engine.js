@@ -122,16 +122,27 @@ const BoxEngine = (function () {
   function open(input, provinceData) {
     const TARGET = 2026;
 
-    // 0. 位次锚定换算：直接用用户输入的真实全省排名换算 2026 等位分
-    //    ⚠️ 信任用户输入的 rank，绝不用模型反查覆盖（反查会被曲线误差污染）
-    let equivalentScore2026 = input.score; // 兜底：换算失败时退化为同分
+    // 0. 位次锚定换算
+    //    有 rank → 信任用户输入，convertByRank
+    //    无 rank → 用分数反查当年位次（估算，可能有偏差）
+    //    年份超出字典范围 → 降级同分
+    let equivalentScore2026 = input.score; // 兜底
     let conversion = null;
-    if (window.RankConverter && input.rank && input.track) {
-      conversion = RankConverter.convertByRank(
-        input.rank, input.province, input.year, input.track, TARGET
-      );
-      if (conversion && conversion.equivalentScore != null) {
-        equivalentScore2026 = conversion.equivalentScore;
+    let rankSource = 'none';
+    if (window.RankConverter && input.track) {
+      if (input.rank && input.rank >= 1) {
+        // 用户填了排名 → 精确换算
+        rankSource = 'user';
+        conversion = RankConverter.convertByRank(input.rank, input.province, input.year, input.track, TARGET);
+        if (conversion && conversion.equivalentScore != null) equivalentScore2026 = conversion.equivalentScore;
+      } else {
+        // 未填排名 → 用分数反查当年位次（估算）
+        rankSource = 'estimated';
+        conversion = RankConverter.convert(input.score, input.province, input.year, input.track, TARGET);
+        if (conversion && conversion.equivalentScore != null) {
+          equivalentScore2026 = conversion.equivalentScore;
+          // 反查的位次回填到 conversion.rank（供前端展示"估算位次"）
+        }
       }
     }
 
@@ -212,7 +223,8 @@ const BoxEngine = (function () {
       // V2 新增：位次锚定换算结果（透传给前端展示）
       equivalentScore2026,
       conversion,
-      provinceRank: input.rank, // 全省位次：直接用用户输入的真实值
+      provinceRank: input.rank || (conversion && conversion.rank), // 有用户输入用输入，否则用反查估算值
+      rankSource, // 'user'=用户填写 / 'estimated'=分数反查 / 'none'=未换算
       track: input.track,
       // 专业分判定（V3）：用户填了专业分则按专业判
       judgeByMajor: !!input.majorScore,
