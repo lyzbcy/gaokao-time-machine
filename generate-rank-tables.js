@@ -369,6 +369,36 @@ const data = generate();
 const outDir = path.join(__dirname, 'js', 'data');
 fs.mkdirSync(outDir, { recursive: true });
 const outPath = path.join(outDir, 'rank-tables.json');
+
+// 统计写入 _meta（作为前端文案的唯一真相源，避免多处硬编码不一致）
+let officialCount = 0, extrapolatedCount = 0, predictedCount = 0;
+const realProvinceSet = new Set();
+for (const code in data.provinces) {
+  for (const year in data.provinces[code].years) {
+    for (const track in data.provinces[code].years[year]) {
+      const src = data.provinces[code].years[year][track].source;
+      if (src === 'official') { officialCount++; realProvinceSet.add(code); }
+      else if (src === 'official-extrapolated') extrapolatedCount++;
+      else predictedCount++;
+    }
+  }
+}
+data._meta.stats = {
+  provinceCount: Object.keys(data.provinces).length,
+  officialCount,
+  extrapolatedCount,
+  predictedCount,
+  realProvinceCount: realProvinceSet.size,
+  realProvinceList: [...realProvinceSet].sort(),
+  totalTables: officialCount + extrapolatedCount + predictedCount,
+};
+data._meta.sources = {
+  predicted: '模型预测',
+  official: '官方/考试院',
+  'official-extrapolated': '真实锚点扩展',
+  ocr: 'OCR抓取',
+};
+
 fs.writeFileSync(outPath, JSON.stringify(data, null, 2), 'utf-8');
 
 // 统计

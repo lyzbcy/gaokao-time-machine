@@ -43,6 +43,8 @@ const App = (function () {
     } catch (e) {
       console.warn('[App] rank-tables.json 加载异常，将使用同分模式:', e.message);
     }
+    // 构建统一数据统计（折叠区与关于页共用，避免硬编码不一致）
+    window.DataStats = makeDataStats();
 
     // 2. 初始化 Supabase（异步，不阻塞）；就绪后刷新所有云状态徽章
     if (window.SupabaseConfig) {
@@ -64,15 +66,58 @@ const App = (function () {
   function renderDisclaimer() {
     const el = document.getElementById('disclaimerBody');
     if (!el || !SCORE_DATA) return;
-    const m = SCORE_DATA._meta;
-    el.innerHTML = `
-      <p>🎯 <b>这是什么：</b>一个娱乐网页，把你当年的高考分数换算到 2026 年，看看能上什么学校，纯属开盲盒玩。</p>
-      <p>📊 <b>数据范围：</b>${m.provinces.length} 个省份 × ${m.schoolCount} 所代表性院校 × ${m.years.length} 个年份（${m.years[0]}-${m.years[m.years.length-1]}）。</p>
-      <p>📈 <b>位次换算：</b>核心机制是「位次锚定」——你当年的全省排名，换算到 2026 年的等位分。其中 23 省的一分一段表使用从教育在线(eol.cn)抓取的<b>真实官方数据</b>（34 张表），其余省份/年份为锚点校准模型生成。</p>
-      <p>🔮 <b>2026 学校分数线：</b>由加权线性回归模型预测，非真实数据。历年院校分数为基于学校梯队与省份难度的<b>代表性估算</b>，非逐校爬取，与实际录取分可能存在偏差。</p>
-      <p>⚠️ <b>郑重声明：</b>本网页仅供娱乐，<b>不是志愿填报工具</b>。任何升学决策请以各省教育考试院官方公告为准。</p>
-      <p style="margin-top:8px;color:var(--text-light)">数据来源说明详见 <code>docs/数据与预测说明.md</code></p>
-    `;
+    el.innerHTML = window.DataStats ? DataStats.disclaimerHTML() : '';
+  }
+
+  // ---------- 数据统计公共模块（折叠区 + 关于页共用，数字来自数据源 _meta） ----------
+  // 唯一真相源：rank-tables.json._meta.stats + schools-dict.json._meta
+  // 两处文案都从这里取数，重跑 generate 后自动同步，杜绝硬编码不一致。
+  function makeDataStats() {
+    const dictMeta = (SCORE_DATA && SCORE_DATA._meta) || {};
+    const rankMeta = (window.RANK_DATA && window.RANK_DATA._meta) || {};
+    const st = rankMeta.stats || {};
+
+    // 省码 → 省名
+    const provName = {};
+    if (SCORE_DATA && SCORE_DATA.provinces) {
+      for (const code in SCORE_DATA.provinces) provName[code] = SCORE_DATA.provinces[code].name;
+    }
+    const realProvinceNames = (st.realProvinceList || []).map(c => provName[c] || c);
+
+    return {
+      // 原始数字
+      provinceCount: st.provinceCount || dictMeta.provinces && dictMeta.provinces.length || 31,
+      schoolCount: dictMeta.schoolCount || 0,
+      yearCount: (dictMeta.years && dictMeta.years.length) || 0,
+      yearRange: dictMeta.years ? (dictMeta.years[0] + '-' + dictMeta.years[dictMeta.years.length - 1]) : '',
+      officialCount: st.officialCount || 0,
+      realProvinceCount: st.realProvinceCount || 0,
+      realProvinceNames,
+
+      // 折叠区文案（底部「📊 数据与预测说明」）
+      disclaimerHTML() {
+        const s = this;
+        return `
+          <p>🎯 <b>这是什么：</b>一个娱乐网页，把你当年的高考分数换算到 2026 年，看看能上什么学校，纯属开盲盒玩。</p>
+          <p>📊 <b>数据范围：</b>${s.provinceCount} 个省份 × ${s.schoolCount} 所代表性院校 × ${s.yearCount} 个年份（${s.yearRange}）。</p>
+          <p>📈 <b>位次换算：</b>核心机制是「位次锚定」——你当年的全省排名，换算到 2026 年的等位分。其中 ${s.realProvinceCount} 省的一分一段表使用从教育在线(eol.cn)抓取的<b>真实官方数据</b>（${s.officialCount} 张表），其余省份/年份为锚点校准模型生成。</p>
+          <p>🔮 <b>2026 学校分数线：</b>由加权线性回归模型预测，非真实数据。历年院校分数为基于学校梯队与省份难度的<b>代表性估算</b>，非逐校爬取，与实际录取分可能存在偏差。</p>
+          <p>⚠️ <b>郑重声明：</b>本网页仅供娱乐，<b>不是志愿填报工具</b>。任何升学决策请以各省教育考试院官方公告为准。</p>
+          <p style="margin-top:8px;color:var(--text-light)">数据来源说明详见 <code>docs/数据与预测说明.md</code></p>
+        `;
+      },
+
+      // 关于页文案（关于这个项目那段）
+      aboutHTML() {
+        const s = this;
+        return `
+          <b>高考分数时光机</b> 是一个纯娱乐网页，<b>不是志愿填报工具</b>。<br><br>
+          一分一段表已接入<b>各省教育考试院真实数据</b>（教育在线转载，${s.realProvinceCount}省覆盖），其余用锚点校准模型。任何升学决策请以各省教育考试院官方公告为准。<br><br>
+          技术栈：原生 HTML/CSS/JS 单页应用 + 位次锚定换算 + Supabase 云后端 + 懒加载架构。<br>
+          数据：全国 ${s.provinceCount} 省 × ${s.schoolCount} 所院校 × ${s.yearRange}，含 ${s.officialCount} 张真实一分一段表。
+        `;
+      },
+    };
   }
 
   // ---------- 刷新所有云连接状态徽章（Supabase 就绪后调用） ----------

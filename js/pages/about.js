@@ -48,10 +48,7 @@ const AboutPage = (function () {
       <h2 class="section-title">📜 关于这个项目</h2>
       <section class="card">
         <div class="about-bio">
-          <b>高考分数时光机</b> 是一个纯娱乐网页，<b>不是志愿填报工具</b>。<br><br>
-          一分一段表已接入<b>各省教育考试院真实数据</b>（教育在线转载，17省覆盖），其余用锚点校准模型。任何升学决策请以各省教育考试院官方公告为准。<br><br>
-          技术栈：原生 HTML/CSS/JS 单页应用 + 位次锚定换算 + Supabase 云后端 + 懒加载架构。<br>
-          数据：全国 31 省 × 638 所院校 × 2019-2025，含 91 张真实一分一段表。
+          ${(window.DataStats && DataStats.aboutHTML()) || ''}
         </div>
       </section>
 
