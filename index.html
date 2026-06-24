@@ -29,6 +29,7 @@
     <a href="#/ranking">排行榜</a>
     <a href="#/collection">我的</a>
     <a href="#/about">关于</a>
+    <a href="javascript:void(0)" onclick="App.openQq()">加群</a>
     <a href="javascript:void(0)" onclick="App.openReward()">赞赏</a>
   </nav>
 </header>
@@ -65,6 +66,18 @@
     <img src="img/ui/reward-qr.jpg" alt="赞赏二维码" class="reward-qr" loading="lazy">
     <p class="modal-tip">📱 长按或扫码赞赏 · 金额随意，心意到就好</p>
     <p class="modal-thanks">感谢每一份支持 🙏</p>
+  </div>
+</div>
+
+<!-- QQ群弹窗 -->
+<div id="qq-modal" class="modal-overlay hidden" onclick="if(event.target===this)App.closeQq()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="App.closeQq()">×</button>
+    <h2 class="modal-title">💬 加入 QQ 群</h2>
+    <p class="modal-sub">想反馈建议、找作者补数据、或者单纯想认识捞鱼？<br>扫码进群，一起玩耍 🎉</p>
+    <img src="img/ui/qq-group.jpg" alt="QQ群二维码" class="reward-qr" loading="lazy">
+    <p class="modal-tip">📱 长按或扫码加群 · 也可以直接搜索群号加入</p>
+    <p class="modal-thanks">群里见！🐟</p>
   </div>
 </div>
 

@@ -180,8 +180,23 @@ const App = (function () {
     setTimeout(() => modal.classList.add('hidden'), 250);
   }
 
+  // ---------- QQ群弹窗 ----------
+  function openQq() {
+    const modal = document.getElementById('qq-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden', 'fade-out');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeQq() {
+    const modal = document.getElementById('qq-modal');
+    if (!modal) return;
+    modal.classList.add('fade-out');
+    document.body.style.overflow = '';
+    setTimeout(() => modal.classList.add('hidden'), 250);
+  }
+
   return {
-    start, route, toast, playBoxAnimation, openReward, closeReward,
+    start, route, toast, playBoxAnimation, openReward, closeReward, openQq, closeQq,
     get data() { return SCORE_DATA; },
     // 全局可读写
     get lastResult() { return lastResult; },

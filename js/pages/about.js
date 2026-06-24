@@ -37,6 +37,9 @@ const AboutPage = (function () {
         <a class="about-link-btn" href="https://lyzbcy.github.io/about/" target="_blank" rel="noopener">
           🏠 作者主页（项目展示 / 技术积累）
         </a>
+        <a class="about-link-btn" href="javascript:void(0)" onclick="App.openQq()" style="background:linear-gradient(135deg,#12B7F5,#0D8BD9);box-shadow:0 6px 16px rgba(18,183,245,0.35)">
+          💬 加入 QQ 群（反馈/补数据/聊天）
+        </a>
         <a class="about-link-btn ghost" href="javascript:void(0)" onclick="App.openReward()">
           ☕ 请我喝杯咖啡（赞赏）
         </a>
