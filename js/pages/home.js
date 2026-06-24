@@ -141,6 +141,12 @@ const HomePage = (function () {
       const row = document.getElementById('majorScoreRow');
       if (row) row.style.display = e.target.value.trim() ? '' : 'none';
     });
+
+    // V4：吉祥物互动——表单聚焦时探头看
+    ['f-province','f-year','f-track','f-score','f-rank','f-school','f-major'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('focus', () => window.Mascot && Mascot.setState('peek', {silent:true}));
+    });
   }
 
   // 判断输入的学校是否在列表内（自定义校）
@@ -228,10 +234,17 @@ const HomePage = (function () {
 
   async function onOpen() {
     const input = validate();
-    if (!input) return;
+    if (!input) {
+      // V4：校验失败，吉祥物生气
+      if (window.Mascot) Mascot.flash('angry', 2000);
+      return;
+    }
 
     const provData = SCORE_DATA.provinces[input.province];
     if (!provData) { App.toast('数据加载异常'); return; }
+
+    // V4：吉祥物欢呼开盒
+    if (window.Mascot) Mascot.setState('spin');
 
     // 开盒动效
     await App.playBoxAnimation();
@@ -239,6 +252,13 @@ const HomePage = (function () {
     // 计算
     const result = BoxEngine.open(input, provData);
     result.trashTalk = TrashTalk.generate(result);
+
+    // V4：按结果触发吉祥物庆祝/安慰
+    if (window.Mascot) {
+      if (result.tierDelta > 0) Mascot.setState('happy');
+      else if (result.tierDelta < 0) Mascot.setState('cry');
+      else Mascot.setState('idle');
+    }
 
     // 保存
     const record = {

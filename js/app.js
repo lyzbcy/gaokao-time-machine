@@ -49,6 +49,10 @@ const App = (function () {
     // 4. 路由
     window.addEventListener('hashchange', route);
     route();
+
+    // 5. 童话背景 + 吉祥物（V4）
+    if (window.FairyBg) FairyBg.init();
+    if (window.Mascot) Mascot.init();
   }
 
   function renderDisclaimer() {
@@ -98,30 +102,20 @@ const App = (function () {
       const shine = document.getElementById('box-shine');
       if (!overlay || !img) { resolve(); return; }
 
-      // 随机一个表情作为开盒过程动画（用星星布丁或问号占位）
-      const animFaces = ['❓', '🎲', '✨', '🔮', '⭐'];
-      const face = animFaces[Math.floor(Math.random() * animFaces.length)];
-
-      img.style.display = 'none';
+      // V4：用星星布丁 GIF 做开盒动画（替代文字 emoji 占位）
       shine.className = 'box-shine';
       overlay.classList.remove('hidden', 'fade-out');
-
-      // 用文字表情做过程动画（图片未接入时）
-      let stage = document.createElement('div');
-      stage.style.fontSize = '120px';
-      stage.style.lineHeight = '1';
-      stage.textContent = face;
-      stage.className = 'box-emoji';
-      stage.id = 'box-emoji';
-      img.parentNode.replaceChild(stage, img);
+      img.style.display = '';
+      img.classList.remove('stage-shake', 'stage-pulse', 'stage-pop');
+      img.src = 'img/anim/spin.gif';
 
       // 阶段1：震动
-      stage.classList.add('stage-shake');
+      img.classList.add('stage-shake');
 
       setTimeout(() => {
         // 阶段2：放大发光
-        stage.classList.remove('stage-shake');
-        stage.classList.add('stage-pulse');
+        img.classList.remove('stage-shake');
+        img.classList.add('stage-pulse');
         shine.classList.add('show');
       }, 500);
 

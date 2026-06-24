@@ -1,0 +1,322 @@
+/* ===========================================================
+ * fairy.css — 糖果系天空云朵童话风（V4 视觉重塑）
+ *
+ * 覆盖 style.css 的调色板和组件，引入手写体字体、云朵星星背景、
+ * 糖果色卡片、胖圆按钮等童话元素。
+ * =========================================================== */
+
+/* ---------- 调色板推翻（糖果系） ---------- */
+:root {
+  --candy-pink:   #FFB7D5;
+  --candy-rose:   #FF8FB8;
+  --candy-mint:   #A8E6CF;
+  --candy-yellow: #FFE5A0;
+  --candy-blue:   #B8E0FF;
+  --candy-sky:    #A6D8FF;
+  --candy-lilac:  #D4B5FF;
+
+  --rainbow:      linear-gradient(135deg, #FFB7D5 0%, #FFE5A0 33%, #A8E6CF 66%, #B8E0FF 100%);
+  --rainbow-soft: linear-gradient(135deg, #FFF0F6 0%, #FFFBE6 33%, #F0FFF8 66%, #F0F8FF 100%);
+  --candy-grad:   linear-gradient(135deg, #FFB7D5, #FF8FB8);
+  --sky-grad:     linear-gradient(180deg, #D6EEFF 0%, #E8F4FF 50%, #FFF6FA 100%);
+
+  /* 覆盖旧变量，让旧组件继承糖果色 */
+  --orange:        #FF8FB8;
+  --orange-light:  #FFB7D5;
+  --purple:        #D4B5FF;
+  --purple-light:  #EED9FF;
+  --pink:          #FF8FB8;
+  --grad-main:     linear-gradient(135deg, #FF8FB8 0%, #D4B5FF 50%, #B8E0FF 100%);
+  --grad-warm:     linear-gradient(135deg, #FFE5A0 0%, #FFB7D5 100%);
+  --grad-cool:     linear-gradient(135deg, #B8E0FF 0%, #A8E6CF 100%);
+
+  --text-main:     #4A3B5C;
+  --text-sub:      #7A6B8C;
+  --text-light:    #A89BBA;
+
+  --card-bg:       #FFFFFF;
+  --card-shadow:   0 10px 28px rgba(255,143,184,0.16), 0 3px 8px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 14px 36px rgba(255,143,184,0.26);
+  --card-radius:   24px;
+
+  --bg-page:       #E8F4FF;
+
+  --font-fun:      'ZCOOL KuaiLe', 'ZCOOL XiaoWei', -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body:     'ZCOOL XiaoWei', -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ---------- 全局字体 ---------- */
+body {
+  font-family: var(--font-body);
+  background: var(--sky-grad);
+  background-attachment: fixed;
+}
+h1, h2, h3, .hero-title, .brand-name, .section-title, .label-title,
+.modal-title, .about-name, .open-btn, .btn, .rank-tab {
+  font-family: var(--font-fun);
+  font-weight: 400; /* 站酷快乐体本身较粗 */
+}
+
+/* ---------- 背景装饰层（云朵+星星+彩虹） ---------- */
+#fairy-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#fairy-bg .cloud,
+#fairy-bg .star,
+#fairy-bg .rainbow {
+  position: absolute;
+  will-change: transform;
+  transition: transform .8s cubic-bezier(.34,1.56,.64,1);
+}
+/* 云朵（CSS 画） */
+#fairy-bg .cloud {
+  background: #fff;
+  border-radius: 100px;
+  opacity: 0.7;
+  filter: drop-shadow(0 4px 12px rgba(166,216,255,0.3));
+}
+#fairy-bg .cloud::before,
+#fairy-bg .cloud::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+#fairy-bg .cloud::before {
+  width: 55%; height: 140%;
+  top: -50%; left: 15%;
+}
+#fairy-bg .cloud::after {
+  width: 45%; height: 120%;
+  top: -35%; right: 12%;
+}
+/* 星星（用 sparkle.gif 或 emoji） */
+#fairy-bg .star {
+  font-size: 20px;
+  opacity: 0.8;
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+/* 彩虹弧 */
+#fairy-bg .rainbow {
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 200px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  border-top: 14px solid transparent;
+  background:
+    radial-gradient(ellipse at center bottom,
+      transparent 58%, #FFB7D5 58% 64%,
+      #FFE5A0 64% 70%, #A8E6CF 70% 76%,
+      #B8E0FF 76% 82%, #D4B5FF 82% 88%, transparent 88%);
+  opacity: 0.45;
+  filter: blur(0.5px);
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(var(--ox,0), var(--oy,0)); }
+  50%      { transform: translate(calc(var(--ox,0) + 30px), calc(var(--oy,0) - 18px)); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translate(var(--ox,0), var(--oy,0)); }
+  50%      { transform: translate(calc(var(--ox,0) - 24px), calc(var(--oy,0) + 14px)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50%      { opacity: 1; transform: scale(1.15); }
+}
+@keyframes wobble {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* 让正文内容浮在背景之上 */
+#app, .topbar, .disclaimer { position: relative; z-index: 2; }
+#box-overlay, #reward-modal, #toast, #mascot { z-index: 9000; }
+
+/* ---------- 组件童话化 ---------- */
+
+/* 顶栏：彩虹渐变条 + 波浪底 */
+.topbar {
+  background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,231,240,0.85));
+  border-bottom: none;
+  box-shadow: 0 4px 16px rgba(255,143,184,0.1);
+}
+.brand-name {
+  background: var(--rainbow);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.nav-links a {
+  border-radius: 999px;
+  transition: all .25s;
+}
+.nav-links a:hover {
+  background: var(--rainbow-soft);
+  transform: translateY(-1px);
+}
+.nav-links a.active {
+  background: var(--candy-grad);
+  box-shadow: 0 4px 12px rgba(255,143,184,0.4);
+}
+
+/* 卡片：虚线描边 + 轻微旋转 + 糖果阴影 */
+.card {
+  border: 2.5px dashed rgba(255,143,184,0.4);
+  border-radius: var(--card-radius);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(4px);
+  position: relative;
+}
+.card::before {
+  /* 卡片左上角小装饰 */
+  content: '✨';
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  font-size: 18px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 区块标题：星星前缀 + 手写体 */
+.section-title {
+  font-family: var(--font-fun);
+  font-size: 19px;
+}
+.section-title::before {
+  content: '🌟';
+  background: none;
+  width: auto;
+  height: auto;
+  font-size: 18px;
+  border-radius: 0;
+}
+
+/* 输入框/下拉：胖圆角 + 糖果光环 */
+.input, .select {
+  border-radius: 18px;
+  border: 2.5px solid rgba(212,181,255,0.5);
+  background: rgba(255,255,255,0.8);
+  font-weight: 600;
+  transition: all .25s;
+}
+.input::placeholder { color: var(--text-light); }
+.input:focus, .select:focus {
+  border-color: var(--candy-rose);
+  box-shadow: 0 0 0 5px rgba(255,143,184,0.18);
+  background: #fff;
+}
+.select {
+  /* 下拉箭头换成星星 */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><text x='8' y='13' font-size='13' text-anchor='middle'>⭐</text></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/* 开盒按钮：更胖 + 摇摆 + 彩虹 */
+.open-btn {
+  background: var(--rainbow);
+  border-radius: 20px;
+  padding: 20px;
+  font-family: var(--font-fun);
+  font-size: 20px;
+  letter-spacing: 3px;
+  box-shadow: 0 10px 24px rgba(255,143,184,0.4);
+  animation: wobble 3s ease-in-out infinite;
+}
+.open-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  animation: bounce .6s ease-in-out infinite;
+}
+
+/* 标签卡：云朵底座感 */
+.label-card {
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(255,143,184,0.25);
+}
+.label-card .inner {
+  border-radius: 24px;
+}
+
+/* 稀有度胶囊糖果色（覆盖 style.css 的 tier 配色，更糖果） */
+.tier-ssr    { color: #FFB300; }
+.tier-ssr .rarity { background: linear-gradient(135deg,#FFE082,#FFB300); }
+.tier-sr     { color: #FF6FA1; }
+.tier-sr  .rarity { background: linear-gradient(135deg,#FFB7D5,#FF6FA1); }
+.tier-r      { color: #4FC3F7; }
+.tier-r   .rarity { background: linear-gradient(135deg,#B8E0FF,#4FC3F7); }
+.tier-n      { color: #9575CD; }
+.tier-n   .rarity { background: linear-gradient(135deg,#D4B5FF,#9575CD); }
+
+/* 骚话气泡：云朵感 */
+.trash-talk {
+  background: linear-gradient(135deg, #FFF6E5, #FFE9F3, #E8F4FF);
+  border: 2px dashed rgba(255,143,184,0.3);
+  border-radius: 20px;
+  font-family: var(--font-fun);
+}
+.trash-talk::before { content: '☁️'; }
+
+/* 排行榜/图鉴/历史：糖果化 */
+.rank-tab.active {
+  background: var(--candy-grad);
+}
+.prob-bar-fill {
+  background: var(--rainbow) !important;
+}
+
+/* ---------- 吉祥物（右下角悬浮） ---------- */
+#mascot {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 96px;
+  height: 96px;
+  z-index: 9000;
+  cursor: pointer;
+  filter: drop-shadow(0 8px 16px rgba(74,59,92,0.25));
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  animation: bounce 2.5s ease-in-out infinite;
+}
+#mascot:hover { transform: scale(1.1) rotate(-5deg); }
+#mascot:active { transform: scale(0.92); }
+#mascot img { width: 100%; height: 100%; object-fit: contain; }
+#mascot .mascot-bubble {
+  position: absolute;
+  bottom: 100%;
+  right: 50%;
+  transform: translateX(50%) translateY(-4px);
+  background: #fff;
+  border: 2px dashed var(--candy-rose);
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: var(--font-fun);
+  color: var(--text-main);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+#mascot .mascot-bubble.show { opacity: 1; }
+
+@media (max-width: 480px) {
+  #mascot { width: 72px; height: 72px; right: 10px; bottom: 10px; }
+  #fairy-bg .rainbow { width: 100%; }
+}
+
+/* 尊重减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .open-btn, #mascot { animation: none !important; }
+  #fairy-bg .cloud, #fairy-bg .star { animation: none !important; }
+}

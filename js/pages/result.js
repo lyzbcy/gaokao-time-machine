@@ -26,6 +26,14 @@ const ResultPage = (function () {
     const def = result.label;
     const tier = Labels.tier(def.tier);
     const isHidden = def.tier === 'hidden';
+
+    // V4：结果页吉祥物反应（升档庆祝/掉档安慰/隐藏款惊喜）
+    if (window.Mascot) {
+      if (isHidden) Mascot.setState('happy');
+      else if (result.tierDelta > 0) Mascot.setState('happy');
+      else if (result.tierDelta < 0) Mascot.setState('cry');
+      else Mascot.setState('idle');
+    }
     const probPct = (result.appearanceProb * 100).toFixed(isHidden ? 2 : 1);
 
     app.innerHTML = `

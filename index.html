@@ -6,11 +6,17 @@
 <title>高考分数时光机 · 你的分数放2026能上啥？</title>
 <meta name="description" content="输入你当年的高考分数，时光机算算放2026年能上什么学校。开盒你的专属称号，纯属娱乐。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/fairy.css">
 </head>
 <body>
+
+<!-- 童话背景装饰层（云朵+星星+彩虹，鼠标可推开） -->
+<div id="fairy-bg"></div>
 
 <!-- 顶部导航 -->
 <header class="topbar">
@@ -62,6 +68,12 @@
   </div>
 </div>
 
+<!-- 吉祥物（星星布丁，右下角悬浮） -->
+<div id="mascot" title="戳我有惊喜">
+  <span class="mascot-bubble" id="mascotBubble"></span>
+  <img id="mascotImg" src="img/anim/idle-bubble.gif" alt="星星布丁" loading="lazy">
+</div>
+
 <!-- 模块脚本（顺序很重要：config→data→modules→pages→app） -->
 <script src="js/config/supabase.js"></script>
 <script src="js/modules/predictor.js"></script>
@@ -69,6 +81,8 @@
 <script src="js/modules/rank-converter.js"></script>
 <script src="js/modules/box-engine.js"></script>
 <script src="js/modules/trash-talk.js"></script>
+<script src="js/modules/fairy-bg.js"></script>
+<script src="js/modules/mascot.js"></script>
 <script src="js/modules/share-card.js"></script>
 <script src="js/data/repository.js"></script>
 <script src="js/pages/home.js"></script>
