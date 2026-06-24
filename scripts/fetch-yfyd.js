@@ -27,24 +27,81 @@ const CONFIG = {
   sc: { name: '四川', pages: [
     { year: 2023, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/si_chuan/dongtai/202306/t20230625_2447135.shtml' },
     { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/si_chuan/dongtai/202507/t20250702_2678480.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/si_chuan/dongtai/202507/t20250702_2678481.shtml' },
   ]},
   ha: { name: '河南', pages: [
-    { year: 2024, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/he_nan/dongtai/202406/t20240625_2619064.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/he_nan/dongtai/202506/t20250625_2676860.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/he_nan/dongtai/202506/t20250625_2676858.shtml' },
   ]},
   sd: { name: '山东', pages: [
+    { year: 2024, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shan_dong/dongtai/202406/t20240625_2619329.shtml' },
     { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shan_dong/dongtai/202506/t20250625_2677092.shtml' },
   ]},
   gd: { name: '广东', pages: [
     { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/guang_dong/dongtai/202406/t20240626_2619547.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/guang_dong/dongtai/202506/t20240626_2677410.shtml' },
   ]},
   js: { name: '江苏', pages: [
-    // 注意：t20240624_2619055 是图片版抓不到，用 t20240625_2619080（含HTML表格版）
     { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/jiang_su/dongtai/202406/t20240625_2619080.shtml' },
   ]},
   hb: { name: '湖北', pages: [
     { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hu_bei/dongtai/202406/t20240625_2619340.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/hu_bei/dongtai/202506/t20250625_2677137.shtml' },
   ]},
-  // 更多省逐个补充 URL（找到一个加一个）
+  hn: { name: '湖南', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hu_nan/dongtai/202406/t20240625_2619096.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hu_nan/dongtai/202506/t20250625_2676956.shtml' },
+  ]},
+  zj: { name: '浙江', pages: [
+    { year: 2024, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/zhe_jiang/dongtai/202406/t20240626_2619511.shtml' },
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/zhe_jiang/dongtai/202506/t20250625_2677143.shtml' },
+  ]},
+  he: { name: '河北', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/he_bei/dongtai/202506/t20250624_2676842.shtml' },
+  ]},
+  ah: { name: '安徽', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/an_hui/dongtai/202406/t20240625_2619348.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/an_hui/dongtai/202506/t20250625_2676962.shtml' },
+  ]},
+  cq: { name: '重庆', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/chong_qing/dongtai/202406/t20240624_2619002.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/chong_qing/dongtai/202506/t20250624_2676752.shtml' },
+  ]},
+  fj: { name: '福建', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/fu_jian/dongtai/202406/t20240625_2619344.shtml' },
+  ]},
+  ln: { name: '辽宁', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/liao_ning/dongtai/202406/t20240624_2619037.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/liao_ning/dongtai/202506/t20250624_2676779.shtml' },
+  ]},
+  jx: { name: '江西', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/jiang_xi/dongtai/202406/t20240626_2619478.shtml' },
+    { year: 2024, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/jiang_xi/dongtai/202406/t20240626_2619467.shtml' },
+  ]},
+  sx: { name: '山西', pages: [
+    { year: 2024, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/shan_xi/dongtai/202406/t20240624_2619042.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/shan_xi/dongtai/202506/t20250626_2677335.shtml' },
+  ]},
+  sn: { name: '陕西', pages: [
+    { year: 2024, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/shan_xi_sheng/dongtai/202406/t20240624_2618954.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/shan_xi_sheng/dongtai/202506/t20250625_2677115.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/shan_xi_sheng/dongtai/202506/t20250625_2677119.shtml' },
+  ]},
+  hl: { name: '黑龙江', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hei_long_jiang/dongtai/202406/t20240625_2619391.shtml' },
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hei_long_jiang/dongtai/202506/t20250624_2676681.shtml' },
+  ]},
+  jl: { name: '吉林', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/ji_lin/dongtai/202406/t20240625_2619214.shtml' },
+  ]},
+  bj: { name: '北京', pages: [
+    { year: 2024, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/bei_jing/dongtai/202406/t20240625_2619140.shtml' },
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/bei_jing/dongtai/202506/t20250625_2676934.shtml' },
+  ]},
+  sh: { name: '上海', pages: [
+    { year: 2024, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shang_hai/dongtai/202406/t20240623_2618511.shtml' },
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shang_hai/dongtai/202506/t20250623_2676341.shtml' },
+  ]},
 };
 
 // ---------- CLI ----------
