@@ -257,6 +257,20 @@ function build() {
     },
     provinces,
   };
+
+  // 合并 rank-tables.json 的统计进 _meta.stats（冗余到小文件，前端 DataStats 兜底用）
+  // 这样即使 9.7MB 的 rank-tables 加载慢/被缓存，stats 也能从本字典读到
+  try {
+    const rankFile = path.join(__dirname, 'js', 'data', 'rank-tables.json');
+    const rankData = JSON.parse(fs.readFileSync(rankFile, 'utf-8'));
+    if (rankData._meta && rankData._meta.stats) {
+      result._meta.stats = rankData._meta.stats;
+      result._meta.statsMergedFrom = 'rank-tables.json';
+    }
+  } catch (e) {
+    console.warn('[build] 未合并 rank 统计:', e.message);
+  }
+
   return result;
 }
 

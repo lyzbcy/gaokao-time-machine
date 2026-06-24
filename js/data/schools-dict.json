@@ -270,7 +270,41 @@
         "name": "西藏",
         "count": 13
       }
-    }
+    },
+    "stats": {
+      "provinceCount": 31,
+      "officialCount": 34,
+      "extrapolatedCount": 87,
+      "predictedCount": 327,
+      "realProvinceCount": 23,
+      "realProvinceList": [
+        "ah",
+        "bj",
+        "cq",
+        "fj",
+        "gd",
+        "gs",
+        "gx",
+        "ha",
+        "hb",
+        "hi",
+        "hl",
+        "hn",
+        "jl",
+        "js",
+        "jx",
+        "nm",
+        "qh",
+        "sc",
+        "sd",
+        "sh",
+        "sn",
+        "tj",
+        "zj"
+      ],
+      "totalTables": 448
+    },
+    "statsMergedFrom": "rank-tables.json"
   },
   "provinces": {
     "sc": {

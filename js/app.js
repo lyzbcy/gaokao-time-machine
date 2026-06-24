@@ -75,7 +75,8 @@ const App = (function () {
   function makeDataStats() {
     const dictMeta = (SCORE_DATA && SCORE_DATA._meta) || {};
     const rankMeta = (window.RANK_DATA && window.RANK_DATA._meta) || {};
-    const st = rankMeta.stats || {};
+    // stats 优先取 RANK_DATA（完整），兜底取 schools-dict._meta.stats（小文件必加载，防 9.7MB 大文件未就绪）
+    const st = rankMeta.stats || dictMeta.stats || {};
 
     // 省码 → 省名
     const provName = {};
