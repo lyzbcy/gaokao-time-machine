@@ -311,6 +311,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .tag-211 { background: #D6E4FF; color: #2563EB; }
 .tag-1   { background: #D1FADF; color: #15803D; }
 .tag-2   { background: #FFE4E6; color: #BE123C; }
+.tag-3   { background: #ECECEC; color: #616161; }
 
 /* ---------- 骚话评价 ---------- */
 .trash-talk {

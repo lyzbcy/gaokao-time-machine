@@ -6,7 +6,7 @@
 
 const ResultPage = (function () {
 
-  const TIER_CN = { '985': '985', '211': '211', '1': '一本', '2': '二本' };
+  const TIER_CN = { '985': '985', '211': '211', '1': '一本', '2': '二本', '3': '专科' };
 
   function render() {
     const result = App.lastResult;
@@ -145,7 +145,7 @@ const ResultPage = (function () {
 
   function tierTag(tier) {
     if (!tier) return '<span class="muted">—</span>';
-    const cls = { '985': 'tag-985', '211': 'tag-211', '1': 'tag-1', '2': 'tag-2' }[tier] || '';
+    const cls = { '985': 'tag-985', '211': 'tag-211', '1': 'tag-1', '2': 'tag-2', '3': 'tag-3' }[tier] || '';
     return `<span class="tier-tag ${cls}">${TIER_CN[tier] || tier}</span>`;
   }
 
@@ -159,7 +159,7 @@ const ResultPage = (function () {
     if (!schools || schools.length === 0) return '';
     const title = predicted ? `2026 你能上的代表校（预测）` : `${year} 你能上的代表校`;
     const rows = schools.map(s => {
-      const cls = { '985': 'tag-985', '211': 'tag-211', '1': 'tag-1', '2': 'tag-2' }[s.tier] || '';
+      const cls = { '985': 'tag-985', '211': 'tag-211', '1': 'tag-1', '2': 'tag-2', '3': 'tag-3' }[s.tier] || '';
       return `
         <tr>
           <td style="text-align:left">${s.name}</td>

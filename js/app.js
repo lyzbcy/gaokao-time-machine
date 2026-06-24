@@ -11,17 +11,23 @@
 
 const App = (function () {
 
-  let SCORE_DATA = null;   // 分数线数据
+  let SCORE_DATA = null;   // 分数线数据（V5 后保留兼容，但主用 SCHOOL_DICT + 按需 ScoreLoader）
   let lastResult = null;   // 上次开盒结果（结果页用）
   let lastInput = null;
 
   // ---------- 启动 ----------
   async function start() {
-    // 1. 加载数据：scores.json 必需，rank-tables.json 可选（失败则降级为同分逻辑）
+    // 1. 加载学校字典（轻量，~100KB，仅 name/tier/dept，无分数线）
     try {
-      const scoreRes = await fetch('js/data/scores.json');
-      if (!scoreRes.ok) throw new Error('scores.json HTTP ' + scoreRes.status);
-      SCORE_DATA = await scoreRes.json();
+      const dictRes = await fetch('js/data/schools-dict.json');
+      if (!dictRes.ok) throw new Error('schools-dict.json HTTP ' + dictRes.status);
+      const dict = await dictRes.json();
+      window.SCHOOL_DICT = dict;
+      // 兼容旧代码：构造一个 SCORE_DATA 壳（_meta + provinces.{name,schools:[{name,tier}]}）
+      SCORE_DATA = { _meta: dict._meta, provinces: {} };
+      for (const code in dict.provinces) {
+        SCORE_DATA.provinces[code] = { name: dict.provinces[code].name, schools: dict.provinces[code].schools };
+      }
       window.SCORE_DATA = SCORE_DATA;
     } catch (e) {
       document.getElementById('app').innerHTML =

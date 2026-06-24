@@ -186,7 +186,7 @@ const HomePage = (function () {
       return;
     }
     // 模糊匹配校名（包含即命中，最多 12 条）
-    const tierLabel = { '985': '985', '211': '211', '1': '一本', '2': '二本' };
+    const tierLabel = { '985': '985', '211': '211', '1': '一本', '2': '二本', '3': '专科' };
     const matches = provData.schools
       .filter(s => s.name.toLowerCase().includes(q))
       .slice(0, 12);
@@ -310,7 +310,19 @@ const HomePage = (function () {
       return;
     }
 
-    const provData = SCORE_DATA.provinces[input.province];
+    // V5：按需懒加载该省分数线（字典只有 name/tier，分数线在 scores/{code}.json）
+    let provData;
+    try {
+      if (window.ScoreLoader) {
+        provData = await ScoreLoader.loadProvScores(input.province);
+      } else {
+        provData = SCORE_DATA.provinces[input.province];
+      }
+    } catch (e) {
+      App.toast('该省数据加载失败，请重试～');
+      if (window.Mascot) Mascot.flash('angry', 2000);
+      return;
+    }
     if (!provData) { App.toast('数据加载异常'); return; }
 
     // V4：吉祥物欢呼开盒

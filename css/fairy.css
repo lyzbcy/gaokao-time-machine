@@ -379,6 +379,7 @@ h1, h2, h3, .hero-title, .brand-name, .section-title, .label-title,
 .school-tier.tag-211 { background: #D6E4FF; color: #2563EB; }
 .school-tier.tag-1 { background: #D1FADF; color: #15803D; }
 .school-tier.tag-2 { background: #FFE4E6; color: #BE123C; }
+.school-tier.tag-3 { background: #E0E0E0; color: #616161; }
 
 /* 未匹配提示 */
 .school-empty {
