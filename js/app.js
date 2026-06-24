@@ -38,9 +38,9 @@ const App = (function () {
       console.warn('[App] rank-tables.json 加载异常，将使用同分模式:', e.message);
     }
 
-    // 2. 初始化 Supabase（异步，不阻塞）
+    // 2. 初始化 Supabase（异步，不阻塞）；就绪后刷新所有云状态徽章
     if (window.SupabaseConfig) {
-      SupabaseConfig.init().catch(e => console.warn(e));
+      SupabaseConfig.init().then(() => refreshCloudBadges()).catch(e => console.warn(e));
     }
 
     // 3. 渲染底部声明
@@ -67,6 +67,17 @@ const App = (function () {
       <p>⚠️ <b>郑重声明：</b>本网页仅供娱乐，<b>不是志愿填报工具</b>。任何升学决策请以各省教育考试院官方公告为准。</p>
       <p style="margin-top:8px;color:var(--text-light)">数据来源说明详见 <code>docs/数据与预测说明.md</code></p>
     `;
+  }
+
+  // ---------- 刷新所有云连接状态徽章（Supabase 就绪后调用） ----------
+  function refreshCloudBadges() {
+    const cloudOn = !!(window.SupabaseConfig && SupabaseConfig.isReady && SupabaseConfig.isReady());
+    const html = cloudOn
+      ? '<span class="cloud-badge on">☁️ 已连接云端 · 全网实时同步</span>'
+      : '<span class="cloud-badge off">📱 单机模式 · 仅本地数据</span>';
+    // 首页徽章
+    const home = document.getElementById('homeCloudBadge');
+    if (home) home.innerHTML = html;
   }
 
   // ---------- 路由 ----------
