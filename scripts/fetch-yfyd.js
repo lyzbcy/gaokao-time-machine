@@ -38,7 +38,8 @@ const CONFIG = {
     { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/guang_dong/dongtai/202406/t20240626_2619547.shtml' },
   ]},
   js: { name: '江苏', pages: [
-    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/jiang_su/dongtai/202406/t20240624_2619055.shtml' },
+    // 注意：t20240624_2619055 是图片版抓不到，用 t20240625_2619080（含HTML表格版）
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/jiang_su/dongtai/202406/t20240625_2619080.shtml' },
   ]},
   hb: { name: '湖北', pages: [
     { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hu_bei/dongtai/202406/t20240625_2619340.shtml' },
