@@ -85,6 +85,7 @@ const App = (function () {
       case '#/result':    ResultPage.render(); break;
       case '#/ranking':   RankingPage.render(); break;
       case '#/collection':CollectionPage.render(); break;
+      case '#/about':     AboutPage.render(); break;
       default:            HomePage.render();
     }
   }
@@ -153,8 +154,23 @@ const App = (function () {
     }, duration);
   }
 
+  // ---------- 赞赏弹窗 ----------
+  function openReward() {
+    const modal = document.getElementById('reward-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden', 'fade-out');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeReward() {
+    const modal = document.getElementById('reward-modal');
+    if (!modal) return;
+    modal.classList.add('fade-out');
+    document.body.style.overflow = '';
+    setTimeout(() => modal.classList.add('hidden'), 250);
+  }
+
   return {
-    start, route, toast, playBoxAnimation,
+    start, route, toast, playBoxAnimation, openReward, closeReward,
     get data() { return SCORE_DATA; },
     // 全局可读写
     get lastResult() { return lastResult; },

@@ -591,3 +591,156 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
 .mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; }
 .muted { color: var(--text-light); font-size: 12px; }
+
+/* ---------- 赞赏弹窗 ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20,10,35,0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 20px;
+  opacity: 1;
+  transition: opacity .25s;
+}
+.modal-overlay.fade-out { opacity: 0; pointer-events: none; }
+.modal-card {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 28px 26px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  animation: modalIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-close {
+  position: absolute;
+  top: 12px; right: 16px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 22px;
+  color: var(--text-light);
+  background: #F5F0FA;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.modal-close:hover { background: var(--purple-light); color: var(--purple); }
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: var(--grad-main);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.modal-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.reward-qr {
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
+  border-radius: 16px;
+  border: 3px solid #FFF;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  object-fit: cover;
+}
+.modal-tip {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+.modal-thanks {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+}
+
+/* ---------- 关于页 ---------- */
+.about-hero {
+  text-align: center;
+  padding: 24px 16px 8px;
+}
+.about-avatar {
+  width: 96px; height: 96px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #fff;
+  box-shadow: 0 8px 20px rgba(155,107,255,0.2);
+}
+.about-name {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.about-slogan {
+  color: var(--text-sub);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.about-studio {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 14px;
+  background: var(--grad-warm);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.about-bio {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.8;
+  margin-top: 18px;
+}
+.about-bio b { color: var(--text-main); }
+.about-link-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  border-radius: 14px;
+  background: var(--grad-main);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(255,111,161,0.3);
+}
+.about-link-btn.ghost {
+  background: #fff;
+  color: var(--purple);
+  border: 2px solid #EEE7F5;
+  box-shadow: none;
+}
+.ip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+.ip-cell {
+  text-align: center;
+  padding: 14px 8px;
+  background: #FAF8FF;
+  border-radius: 14px;
+}
+.ip-cell .ip-emoji { font-size: 32px; }
+.ip-cell .ip-name { font-size: 12px; font-weight: 700; margin-top: 4px; }

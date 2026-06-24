@@ -22,6 +22,8 @@
     <a href="#/">开盒</a>
     <a href="#/ranking">排行榜</a>
     <a href="#/collection">我的</a>
+    <a href="#/about">关于</a>
+    <a href="javascript:void(0)" onclick="App.openReward()">赞赏</a>
   </nav>
 </header>
 
@@ -48,6 +50,18 @@
 <!-- Toast -->
 <div id="toast" class="toast hidden"></div>
 
+<!-- 赞赏弹窗 -->
+<div id="reward-modal" class="modal-overlay hidden" onclick="if(event.target===this)App.closeReward()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="App.closeReward()">×</button>
+    <h2 class="modal-title">☕ 请作者喝杯咖啡</h2>
+    <p class="modal-sub">如果这个时光机让你会心一笑，欢迎请捞鱼喝杯咖啡 ☕<br>你的鼓励是我继续做有趣项目最大的动力～</p>
+    <img src="img/ui/reward-qr.jpg" alt="赞赏二维码" class="reward-qr" loading="lazy">
+    <p class="modal-tip">📱 长按或扫码赞赏 · 金额随意，心意到就好</p>
+    <p class="modal-thanks">感谢每一份支持 🙏</p>
+  </div>
+</div>
+
 <!-- 模块脚本（顺序很重要：config→data→modules→pages→app） -->
 <script src="js/config/supabase.js"></script>
 <script src="js/modules/predictor.js"></script>
@@ -61,6 +75,7 @@
 <script src="js/pages/result.js"></script>
 <script src="js/pages/ranking.js"></script>
 <script src="js/pages/collection.js"></script>
+<script src="js/pages/about.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
