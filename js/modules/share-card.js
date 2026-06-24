@@ -57,11 +57,26 @@ const ShareCard = (function () {
     roundRect(ctx, cardX, cardY, cardW, cardH, 28);
     ctx.stroke();
 
-    // ---------- 标签 emoji（大） ----------
-    ctx.font = '140px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(def.emoji, W/2, cardY + 170);
+    // ---------- 标签表情包图片（大） ----------
+    // 加载真实表情包图片，加载失败则回退文字 emoji
+    const emojiImg = await new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = 'img/labels/' + def.img;
+    });
+    if (emojiImg) {
+      // 画表情包图片（居中，140×140）
+      const imgSize = 150;
+      ctx.drawImage(emojiImg, W/2 - imgSize/2, cardY + 170 - imgSize/2, imgSize, imgSize);
+    } else {
+      // 回退：文字 emoji
+      ctx.font = '140px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(def.emoji, W/2, cardY + 170);
+    }
 
     // ---------- 稀有度条 ----------
     ctx.font = 'bold 16px sans-serif';
