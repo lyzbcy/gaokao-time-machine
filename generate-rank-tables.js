@@ -105,25 +105,32 @@ function strSeed(s) {
  * @param {object} rng
  * @returns {Array<[number,number]>} [[score, cumulativeRank], ...] 从高分到低分
  */
-function generateCurve(maxScore, totalExaminees, batchScore, rng) {
-  // 真实锚点（四川2023理科，作为通用 sigmoid 的基准比例）
-  // rankRatio = rank / totalExaminees，在 total=300000 时的真实值
-  const TOTAL_REF = 300000; // 四川理科参考总考生
-  const anchors = [
+function generateCurve(maxScore, totalExaminees, batchScore, rng, realAnchors) {
+  // 如果有该省的真实锚点（从已抓取的真实一分一段表提取），优先用真实锚点
+  // 否则回退到四川2023理科基准锚点
+  const TOTAL_REF = 300000;
+  const defaultAnchors = [
     [720, 10], [700, 50], [680, 600], [660, 3000], [640, 9000],
     [626, 15000], [610, 24000], [600, 30000], [580, 46000],
-    [560, 64000], [540, 86000], [520, 108000],   // 520≈一本线
-    [500, 135000], [480, 162000], [460, 188000], [433, 218000], // 433≈二本线
+    [560, 64000], [540, 86000], [520, 108000],
+    [500, 135000], [480, 162000], [460, 188000], [433, 218000],
     [400, 248000], [350, 280000], [300, 294000], [200, 299000], [150, 300000],
   ];
-  // 把锚点的 rank 按 totalExaminees/300000 比例缩放到当前省
-  const scale = totalExaminees / TOTAL_REF;
+  const anchors = realAnchors && realAnchors.length >= 10 ? realAnchors : defaultAnchors;
+  const refTotal = realAnchors ? realAnchors[realAnchors.length - 1][1] : TOTAL_REF;
+  // 把锚点的 rank 按 totalExaminees/refTotal 比例缩放到当前省的考生数
+  const scale = totalExaminees / refTotal;
   const scaledAnchors = anchors.map(([s, r]) => [s, Math.max(1, Math.round(r * scale))]);
 
-  // 平移曲线使本科线锚点对齐（refBatch 取 433 本科批口径）
-  const refBatch = 433;
-  const shift = batchScore - refBatch;
-  const shifted = scaledAnchors.map(([s, r]) => [s + shift, r]);
+  // 平移曲线使本科线锚点对齐（仅对默认四川锚点；真实锚点本身就是该省分数，不平移）
+  let shifted;
+  if (realAnchors) {
+    shifted = scaledAnchors;
+  } else {
+    const refBatch = 433;
+    const shift = batchScore - refBatch;
+    shifted = scaledAnchors.map(([s, r]) => [s + shift, r]);
+  }
 
   // 插值生成每分的点（线性插值，保证单调）
   const points = [];
@@ -203,13 +210,107 @@ function trackLabel(track) {
   return { science: '理科', arts: '文科', physics: '物理类', history: '历史类', general: '总分' }[track];
 }
 
+// 查该省该年该 track 是否已有真实数据（返回完整对象或 null）
+function getExistingOfficial(code, year, track) {
+  if (!REAL_TABLES[code]) return null;
+  const alias = { science: 'physics', physics: 'science', arts: 'history', history: 'arts', general: 'general' };
+  const candidates = [track, alias[track]].filter(t => REAL_TABLES[code][t]);
+  for (const t of candidates) {
+    for (const item of REAL_TABLES[code][t]) {
+      if (item.year === year) {
+        return {
+          label: trackLabel(track),
+          batchLine: 0, specialLine: 0,
+          examinees: item.points[item.points.length - 1][1],
+          source: 'official',
+          points: item.points,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+// 找该省该 track 最近的完整真实表（返回 {year, points} 或 null）
+function findRealTable(code, track) {
+  if (!REAL_TABLES[code]) return null;
+  // 精确 track 或别名
+  const alias = { science: 'physics', physics: 'science', arts: 'history', history: 'arts', general: 'general' };
+  const candidates = [track, alias[track]].filter(t => REAL_TABLES[code][t]);
+  if (candidates.length === 0) {
+    // 该省任意 track（同省考生结构接近）
+    const keys = Object.keys(REAL_TABLES[code]);
+    if (keys.length === 0) return null;
+    candidates.push(keys[0]);
+  }
+  // 取所有候选中最近年份的
+  let best = null;
+  for (const t of candidates) {
+    for (const item of REAL_TABLES[code][t]) {
+      if (!best || item.year > best.year) best = { year: item.year, points: item.points, track: t };
+    }
+  }
+  return best;
+}
+
+// ---------- 从已抓取的真实表提取锚点（锚点动态校准） ----------
+// 读现有 rank-tables.json，找 source=official 的表，提取关键分数点位次
+const ANCHOR_CACHE = {};  // { province: { track: [[score,rank],...] } }
+const REAL_TABLES = {};  // { province: { track: [{year, points}] } }
+function loadRealAnchors() {
+  try {
+    const existing = JSON.parse(fs.readFileSync(path.join(__dirname, 'js', 'data', 'rank-tables.json'), 'utf-8'));
+    for (const code in existing.provinces) {
+      ANCHOR_CACHE[code] = {};
+      REAL_TABLES[code] = {};
+      for (const year in existing.provinces[code].years) {
+        for (const track in existing.provinces[code].years[year]) {
+          const t = existing.provinces[code].years[year][track];
+          if (t.source === 'official' && t.points && t.points.length > 50) {
+            // 存完整真实表（供 findRealTable 直接复用）
+            if (!REAL_TABLES[code][track]) REAL_TABLES[code][track] = [];
+            REAL_TABLES[code][track].push({ year: parseInt(year), points: t.points });
+            // 提取锚点（供无真实表的年份用）
+            const pts = t.points;
+            const step = Math.max(1, Math.floor(pts.length / 20));
+            const anchors = [];
+            for (let i = 0; i < pts.length; i += step) anchors.push([pts[i][0], pts[i][1]]);
+            if (anchors[anchors.length-1][0] !== pts[pts.length-1][0]) anchors.push(pts[pts.length-1]);
+            ANCHOR_CACHE[code][track] = anchors;
+          }
+        }
+      }
+    }
+    const provCount = Object.keys(REAL_TABLES).filter(c => Object.keys(REAL_TABLES[c]).length > 0).length;
+    const tableCount = Object.values(REAL_TABLES).reduce((s, p) => Object.values(p).reduce((ss, t) => ss + t.length, 0), 0);
+    console.log(`[锚点校准] 从现有真实数据提取了 ${provCount} 省的 ${tableCount} 张真实表`);
+  } catch (e) {
+    console.log('[锚点校准] 无现有真实数据，使用默认锚点');
+  }
+}
+
+// 取某省某 track 的真实锚点（兼容 track 别名）
+function extractRealAnchors(code, track) {
+  if (!ANCHOR_CACHE[code]) return null;
+  if (ANCHOR_CACHE[code][track]) return ANCHOR_CACHE[code][track];
+  // 别名兼容
+  const alias = { science: 'physics', physics: 'science', arts: 'history', history: 'arts', general: 'general' };
+  if (alias[track] && ANCHOR_CACHE[code][alias[track]]) return ANCHOR_CACHE[code][alias[track]];
+  // 该省任意 track 的锚点（同省考生结构接近，比四川锚点准）
+  const keys = Object.keys(ANCHOR_CACHE[code]);
+  if (keys.length > 0) return ANCHOR_CACHE[code][keys[0]];
+  return null;
+}
+
 // ---------- 生成 ----------
 function generate() {
+  loadRealAnchors();  // 先加载真实锚点
+
   const result = { _meta: {
     generatedAt: new Date().toISOString(),
-    note: '一分一段曲线为代表性模型估算（基于省控线锚点+指数分布生成）。真实关键点位由 scripts/fetch-rank-data.js 抓取后覆盖。仅供娱乐。',
+    note: '一分一段曲线：有真实数据的省/年用真实值，其余用锚点校准模型（优先用同省真实锚点）。仅供娱乐。',
     years: YEARS,
-    model: 'power-law: rank = total * ((max-score)/(max-batch))^2.2',
+    model: 'anchor-calibrated sigmoid',
     sources: { predicted: '模型预测', official: '官方/考试院', ocr: 'OCR抓取' },
   }, provinces: {} };
 
@@ -224,16 +325,38 @@ function generate() {
       for (const track of tracks) {
         const rng = mulberry32(strSeed(code + year + track));
         const lines = batchLinesFor(code, year, track);
-        // 该科类考生数（约为省考生数的 55-65%）
-        const trackExaminees = Math.round(p.examinees * (0.55 + rng() * 0.1));
-        const curve = generateCurve(750, trackExaminees, lines.batch, rng);
+
+        // 0. 如果该省该年该 track 已有真实数据，直接保留（不覆盖）
+        const existing = getExistingOfficial(code, year, track);
+        if (existing) {
+          result.provinces[code].years[year][track] = existing;
+          continue;
+        }
+
+        // 1. 如果该省该 track 有其他年份的真实表，直接复用（目标年做微小通胀调整）
+        const realTable = findRealTable(code, track);
+        let curve, srcLabel, trackExaminees;
+        if (realTable && year >= 2024) {
+          const yearDelta = year - realTable.year;
+          curve = realTable.points.map(([s, r]) => [Math.min(750, s + yearDelta * 2), r]);
+          trackExaminees = realTable.points[realTable.points.length - 1][1];
+          srcLabel = 'official-extrapolated';
+        } else {
+          // 2. 无真实数据：用锚点校准模型（优先同省真实锚点）
+          const realAnchors = extractRealAnchors(code, track);
+          trackExaminees = realAnchors
+            ? realAnchors[realAnchors.length - 1][1]
+            : Math.round(p.examinees * (0.55 + rng() * 0.1));
+          curve = generateCurve(750, trackExaminees, lines.batch, rng, realAnchors);
+          srcLabel = 'predicted';
+        }
 
         result.provinces[code].years[year][track] = {
           label: trackLabel(track),
           batchLine: lines.batch,
           specialLine: lines.special,
           examinees: trackExaminees,
-          source: year === 2026 ? 'predicted' : 'predicted',
+          source: srcLabel,
           points: curve,
         };
       }
