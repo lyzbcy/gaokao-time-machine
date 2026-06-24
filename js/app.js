@@ -84,6 +84,13 @@ const App = (function () {
     // 首页徽章
     const home = document.getElementById('homeCloudBadge');
     if (home) home.innerHTML = html;
+    // Supabase 就绪后重新查询首页开盒总数（解决初始化时序导致显示0的问题）
+    if (cloudOn && window.Repo) {
+      Repo.getTotalCount().then(n => {
+        const el = document.getElementById('totalCount');
+        if (el) el.textContent = n;
+      }).catch(()=>{});
+    }
   }
 
   // ---------- 路由 ----------
