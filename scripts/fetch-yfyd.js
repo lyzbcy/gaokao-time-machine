@@ -26,8 +26,22 @@ const DELAY_MS = 3000;
 const CONFIG = {
   sc: { name: '四川', pages: [
     { year: 2023, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/si_chuan/dongtai/202306/t20230625_2447135.shtml' },
-    // 2024 理科/文科页面数据为图片，暂跳过（待找替代URL）
     { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/si_chuan/dongtai/202507/t20250702_2678480.shtml' },
+  ]},
+  ha: { name: '河南', pages: [
+    { year: 2024, track: 'science', trackLabel: '理科',     url: 'https://gaokao.eol.cn/he_nan/dongtai/202406/t20240625_2619064.shtml' },
+  ]},
+  sd: { name: '山东', pages: [
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shan_dong/dongtai/202506/t20250625_2677092.shtml' },
+  ]},
+  gd: { name: '广东', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/guang_dong/dongtai/202406/t20240626_2619547.shtml' },
+  ]},
+  js: { name: '江苏', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/jiang_su/dongtai/202406/t20240624_2619055.shtml' },
+  ]},
+  hb: { name: '湖北', pages: [
+    { year: 2024, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/hu_bei/dongtai/202406/t20240625_2619340.shtml' },
   ]},
   // 更多省逐个补充 URL（找到一个加一个）
 };
