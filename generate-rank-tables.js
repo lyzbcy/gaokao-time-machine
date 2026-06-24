@@ -32,6 +32,16 @@ const PROVINCES = {
   zj: { name: '浙江',   examinees: 360000, mode2026: 'new', batch2026: { general一段: 492, general特控: 521 } }, // 3+3 总分
   he: { name: '河北',   examinees: 860000, mode2026: 'new', batch2026: { phys本科: 433, phys特控: 506, hist本科: 430, hist特控: 532 } },
   ah: { name: '安徽',   examinees: 650000, mode2026: 'new', batch2026: { phys本科: 427, phys特控: 514, hist本科: 442, hist特控: 513 } },
+  cq: { name: '重庆',   examinees: 350000, mode2026: 'new', batch2026: { phys本科: 427, phys特控: 505, hist本科: 428, hist特控: 524 } }, // 第三批2021
+  fj: { name: '福建',   examinees: 320000, mode2026: 'new', batch2026: { phys本科: 465, phys特控: 525, hist本科: 465, hist特控: 532 } }, // 第三批2021
+  ln: { name: '辽宁',   examinees: 280000, mode2026: 'new', batch2026: { phys本科: 368, phys特控: 501, hist本科: 400, hist特控: 510 } }, // 第三批2021（本科线偏低）
+  jx: { name: '江西',   examinees: 600000, mode2026: 'new', batch2026: { phys本科: 448, phys特控: 520, hist本科: 463, hist特控: 532 } }, // 第四批2024
+  sx: { name: '山西',   examinees: 380000, mode2026: 'old', batch2026: { science本科一批: 480, science本科二批: 410, arts本科一批: 490, arts本科二批: 420 } }, // 第五批2025(老高考口径)
+  sn: { name: '陕西',   examinees: 360000, mode2026: 'old', batch2026: { science本科一批: 475, science本科二批: 405, arts本科一批: 485, arts本科二批: 415 } }, // 老高考
+  hl: { name: '黑龙江', examinees: 250000, mode2026: 'new', batch2026: { phys本科: 360, phys特控: 480, hist本科: 400, hist特控: 500 } }, // 第四批2024
+  jl: { name: '吉林',   examinees: 180000, mode2026: 'new', batch2026: { phys本科: 345, phys特控: 470, hist本科: 385, hist特控: 490 } }, // 第四批2024（本科线偏低）
+  bj: { name: '北京',   examinees: 120000, mode2026: 'new', batch2026: { general本科: 425, general特控: 510 } }, // 3+3
+  sh: { name: '上海',   examinees: 110000, mode2026: 'new', batch2026: { general本科: 403, general特控: 503 } }, // 3+3（满分660，这里按比例调）
 };
 
 const YEARS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
@@ -41,6 +51,10 @@ const YEARS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
 const TRANSITION_YEAR = {
   sc: 2025, ha: 2025, sd: 2020, gd: 2021, js: 2021,
   hb: 2021, hn: 2021, zj: 2017, he: 2021, ah: 2024,
+  cq: 2021, fj: 2021, ln: 2021,             // 第三批
+  jx: 2024, hl: 2024, jl: 2024,             // 第四批
+  sx: 2025, sn: 2025,                       // 第五批（老高考口径，2025起物理历史）
+  bj: 2017, sh: 2017,                       // 第二批 3+3
 };
 
 // 确定性随机
@@ -116,19 +130,25 @@ function batchLinesFor(code, year, track) {
   const adjust = v => Math.round(v * yearFactor);
 
   if (track === 'physics' || track === 'science') {
-    return { batch: adjust(b.phys本科 || b.general本科 || 440), special: adjust(b.phys特控 || b.general特控 || 510) };
+    // 兼容老高考字段 science本科一批
+    const batch = b.phys本科 || b.science本科一批 || b.general本科 || 440;
+    const special = b.phys特控 || b.science本科二批 || b.general特控 || 510;
+    return { batch: adjust(batch), special: adjust(special) };
   }
   if (track === 'history' || track === 'arts') {
-    return { batch: adjust(b.hist本科 || b.general本科 || 445), special: adjust(b.hist特控 || b.general特控 || 525) };
+    const batch = b.hist本科 || b.arts本科一批 || b.general本科 || 445;
+    const special = b.hist特控 || b.arts本科二批 || b.general特控 || 525;
+    return { batch: adjust(batch), special: adjust(special) };
   }
-  // general（浙江山东）
+  // general（浙江山东北京上海）
   return { batch: adjust(b.general一段 || b.general本科 || 490), special: adjust(b.general特控 || 520) };
 }
 
 function trackFor(code, year) {
+  // 3+3 模式省份（全程 general 总分）：浙江、山东、北京、上海
+  if (code === 'zj' || code === 'sd' || code === 'bj' || code === 'sh') return ['general'];
   const trans = TRANSITION_YEAR[code];
   const isNew = year >= trans;
-  if (code === 'zj' || code === 'sd') return ['general']; // 3+3 总分
   return isNew ? ['physics', 'history'] : ['science', 'arts'];
 }
 

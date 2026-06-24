@@ -7,6 +7,9 @@
 
 const HomePage = (function () {
 
+  // 作者联系方式（学校数据缺失时引导用户）
+  const AUTHOR_CONTACT = 'https://lyzbcy.github.io/gaokao-time-machine/#/about';
+
   function render() {
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -51,11 +54,13 @@ const HomePage = (function () {
         </div>
 
         <div class="input-row">
-          <label>🎓 当年录取的学校（选填，可输入筛选）</label>
-          <input class="input" id="f-school" list="schoolList" autocomplete="off"
-                 placeholder="输入校名筛选，或直接填列表外的学校">
-          <datalist id="schoolList"></datalist>
-          <span class="muted" style="font-size:11px">从列表选会自动带出该校历年数据；填列表外的自定义学校需补「2026预计录取分」</span>
+          <label>🎓 当年录取的学校（选填，输入搜索）</label>
+          <div class="school-search">
+            <input class="input" id="f-school" autocomplete="off"
+                   placeholder="输入校名搜索，如「江南」「清华」">
+            <div class="school-dropdown hidden" id="schoolDropdown"></div>
+          </div>
+          <span class="muted" style="font-size:11px">从列表选会自动带出该校历年数据；搜不到可自定义录入（需补2026预计分）</span>
         </div>
 
         <div class="input-row" id="customSchoolRow" style="display:none">
@@ -134,9 +139,19 @@ const HomePage = (function () {
     // 省份/年份变化 → 联动刷新科类 + 学校列表
     document.getElementById('f-province').addEventListener('change', updateTrackAndSchools);
     document.getElementById('f-year').addEventListener('change', updateTrackAndSchools);
-    // 学校输入变化 → 判断是自定义（列表外）→ 显示2026分数输入框
-    document.getElementById('f-school').addEventListener('input', onSchoolInput);
-    document.getElementById('f-school').addEventListener('change', onSchoolInput);
+    // 学校搜索联想（输入触发、聚焦显示、失焦延迟隐藏）
+    const schoolInput = document.getElementById('f-school');
+    schoolInput.addEventListener('input', e => {
+      onSchoolInput();
+      renderSchoolDropdown(e.target.value);
+    });
+    schoolInput.addEventListener('focus', e => {
+      if (e.target.value.trim()) renderSchoolDropdown(e.target.value);
+    });
+    schoolInput.addEventListener('blur', () => {
+      // 延迟隐藏，让下拉项的 mousedown 先触发
+      setTimeout(() => document.getElementById('schoolDropdown')?.classList.add('hidden'), 200);
+    });
     // 专业名输入 → 显示专业分输入框
     document.getElementById('f-major').addEventListener('input', e => {
       const row = document.getElementById('majorScoreRow');
@@ -156,6 +171,70 @@ const HomePage = (function () {
     return !provData.schools.some(s => s.name === name);
   }
 
+  // 学校搜索：输入时渲染联想下拉
+  function renderSchoolDropdown(query) {
+    const prov = document.getElementById('f-province').value;
+    const dd = document.getElementById('schoolDropdown');
+    const provData = SCORE_DATA.provinces[prov];
+    if (!dd) return;
+    dd.innerHTML = '';
+    if (!query) { dd.classList.add('hidden'); return; }
+
+    const q = query.trim().toLowerCase();
+    if (!provData) {
+      dd.classList.add('hidden');
+      return;
+    }
+    // 模糊匹配校名（包含即命中，最多 12 条）
+    const tierLabel = { '985': '985', '211': '211', '1': '一本', '2': '二本' };
+    const matches = provData.schools
+      .filter(s => s.name.toLowerCase().includes(q))
+      .slice(0, 12);
+
+    if (matches.length === 0) {
+      // 未匹配：友好提示
+      dd.classList.remove('hidden');
+      dd.innerHTML = `
+        <div class="school-empty">
+          <div>😕 没有找到「${escapeHtml(query)}」相关学校诶</div>
+          <div class="school-empty-sub">作者数据不够全，抱歉～你可以：</div>
+          <div class="school-empty-actions">
+            <a href="${AUTHOR_CONTACT}" target="_blank" rel="noopener" class="school-empty-btn">📮 联系作者补数据</a>
+            <span class="school-empty-btn primary" onclick="HomePage.useCustomSchool()">✍️ 直接录入该学校</span>
+          </div>
+        </div>`;
+      return;
+    }
+
+    dd.classList.remove('hidden');
+    matches.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'school-item';
+      item.innerHTML = `<span class="school-name">${highlight(s.name, q)}</span><span class="school-tier tag-${s.tier}">${tierLabel[s.tier] || s.tier}</span>`;
+      item.addEventListener('mousedown', e => {
+        e.preventDefault(); // 防止 input blur 先触发
+        document.getElementById('f-school').value = s.name;
+        dd.classList.add('hidden');
+        onSchoolInput();
+      });
+      dd.appendChild(item);
+    });
+  }
+
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function highlight(name, q) {
+    const idx = name.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return escapeHtml(name);
+    return escapeHtml(name.slice(0, idx)) + '<b>' + escapeHtml(name.slice(idx, idx + q.length)) + '</b>' + escapeHtml(name.slice(idx + q.length));
+  }
+
+  // 用户点"直接录入该学校"：保留下拉文本，显示自定义分数框
+  function useCustomSchool() {
+    document.getElementById('schoolDropdown').classList.add('hidden');
+    onSchoolInput();
+    document.getElementById('f-custom2026')?.focus();
+  }
+
   function onSchoolInput() {
     const prov = document.getElementById('f-province').value;
     const provData = SCORE_DATA.provinces[prov];
@@ -165,7 +244,7 @@ const HomePage = (function () {
     if (customRow) customRow.style.display = isCustom ? '' : 'none';
   }
 
-  // 根据所选省份+年份，刷新科类下拉 + 学校 datalist
+  // 根据所选省份+年份，刷新科类下拉 + 清空学校搜索
   function updateTrackAndSchools() {
     const prov = document.getElementById('f-province').value;
     const year = parseInt(document.getElementById('f-year').value, 10);
@@ -189,20 +268,10 @@ const HomePage = (function () {
       trackSel.appendChild(opt);
     });
 
-    // 刷新学校 datalist（可输入筛选）
-    const list = document.getElementById('schoolList');
-    list.innerHTML = '';
-    const provData = SCORE_DATA.provinces[prov];
-    if (provData) {
-      provData.schools.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.label = `${{ '985': '985', '211': '211', '1': '一本', '2': '二本' }[s.tier] || s.tier}`;
-        list.appendChild(opt);
-      });
-    }
-    // 选省份变化时重置学校输入和自定义框
-    document.getElementById('f-school').value = '';
+    // 选省份变化时重置学校输入、隐藏下拉、隐藏自定义框
+    const schoolInput = document.getElementById('f-school');
+    schoolInput.value = '';
+    document.getElementById('schoolDropdown')?.classList.add('hidden');
     onSchoolInput();
   }
 
@@ -373,7 +442,7 @@ const HomePage = (function () {
     card.innerHTML = html;
   }
 
-  return { render };
+  return { render, useCustomSchool };
 })();
 
 window.HomePage = HomePage;
