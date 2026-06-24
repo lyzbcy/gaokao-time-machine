@@ -330,15 +330,13 @@ const HomePage = (function () {
       return;
     }
 
-    // V5：按需懒加载分数线
-    // 优先加载"用户所在省"；若选了跨省校，加载"该校所在省"（box-engine 要在该省 schools 里找到它）
-    const loadProv = selectedSchoolProv || input.province;
+    // V5：按需懒加载分数线（每省都有全部学校，直接用用户选的省）
     let provData;
     try {
       if (window.ScoreLoader) {
-        provData = await ScoreLoader.loadProvScores(loadProv);
+        provData = await ScoreLoader.loadProvScores(input.province);
       } else {
-        provData = SCORE_DATA.provinces[loadProv];
+        provData = SCORE_DATA.provinces[input.province];
       }
     } catch (e) {
       App.toast('该省数据加载失败，请重试～');

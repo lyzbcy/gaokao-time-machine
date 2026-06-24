@@ -47,6 +47,18 @@ function generate() {
   const dict = JSON.parse(fs.readFileSync(DICT_PATH, 'utf-8'));
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
+  // 构建"全国学校总池"（去重），记录每校的所在地省份 homeProv
+  const ALL_SCHOOLS = [];
+  const seenNames = new Set();
+  for (const code in dict.provinces) {
+    for (const sch of dict.provinces[code].schools) {
+      if (!seenNames.has(sch.name)) {
+        seenNames.add(sch.name);
+        ALL_SCHOOLS.push({ name: sch.name, tier: sch.tier, homeProv: code });
+      }
+    }
+  }
+
   let totalSchools = 0;
   const summary = [];
 
@@ -55,20 +67,24 @@ function generate() {
     const difficulty = PROV_DIFFICULTY[code] || 1.0;
     const schools = [];
 
-    for (const sch of provDict.schools) {
+    // 遍历"全国学校总池"（去重），让每所学校在该省都生成一条录取线
+    // 真实招生：全国本科都跨省招生，每省分数线不同
+    for (const sch of ALL_SCHOOLS) {
       const rng = mulberry32(strSeed(code + sch.name));
       const base = TIER_BASE[sch.tier] || 500;
-      const localFactor = isLocalGuess(sch.name, rng) ? 0.97 : 1.0;
-      const provFactor = difficulty * localFactor * (0.94 + rng() * 0.10); // ±5%
+      // 本地校（所在地=该省）分数线略低（本地生名额多），外省略高
+      const isLocal = (sch.homeProv === code);
+      const localFactor = isLocal ? 0.97 : 1.0;
+      const provFactor = difficulty * localFactor * (0.94 + rng() * 0.10);
       let schBase = Math.round(base * provFactor);
 
-      // tier 微调：同 tier 内按 rng 拉开差距（避免所有 211 都是同一个分）
+      // tier 微调：同 tier 内按 rng 拉开差距
       const tierSpread = sch.tier === '985' ? 60 : sch.tier === '211' ? 50 : sch.tier === '1' ? 45 : sch.tier === '2' ? 40 : 50;
       schBase = Math.round(schBase + (rng() - 0.5) * tierSpread);
       schBase = Math.max(sch.tier === '3' ? 200 : 420, schBase);
 
       // 历年分数
-      const trend = (rng() - 0.45) * 1.5; // 每年趋势
+      const trend = (rng() - 0.45) * 1.5;
       const scores = {};
       for (const y of YEARS) {
         const dy = y - 2019;
