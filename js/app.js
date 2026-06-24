@@ -17,20 +17,25 @@ const App = (function () {
 
   // ---------- 启动 ----------
   async function start() {
-    // 1. 加载数据（分数线 + 一分一段表，并行）
+    // 1. 加载数据：scores.json 必需，rank-tables.json 可选（失败则降级为同分逻辑）
     try {
-      const [scoreRes, rankRes] = await Promise.all([
-        fetch('js/data/scores.json'),
-        fetch('js/data/rank-tables.json'),
-      ]);
+      const scoreRes = await fetch('js/data/scores.json');
+      if (!scoreRes.ok) throw new Error('scores.json HTTP ' + scoreRes.status);
       SCORE_DATA = await scoreRes.json();
       window.SCORE_DATA = SCORE_DATA;
-      window.RANK_DATA = await rankRes.json();
     } catch (e) {
       document.getElementById('app').innerHTML =
         '<div class="empty-state"><div class="big-emoji">😵</div><p>数据加载失败，请通过 zeen-tools 一键启动前端.bat 打开</p></div>';
       console.error(e);
       return;
+    }
+    // rank-tables.json 单独加载，失败不致命（box-engine 会降级为同分换算）
+    try {
+      const rankRes = await fetch('js/data/rank-tables.json');
+      if (rankRes.ok) window.RANK_DATA = await rankRes.json();
+      else console.warn('[App] rank-tables.json 加载失败（HTTP ' + rankRes.status + '），将使用同分模式');
+    } catch (e) {
+      console.warn('[App] rank-tables.json 加载异常，将使用同分模式:', e.message);
     }
 
     // 2. 初始化 Supabase（异步，不阻塞）

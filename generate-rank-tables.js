@@ -95,7 +95,16 @@ function generateCurve(maxScore, totalExaminees, batchScore, rng) {
   for (let i = 1; i < points.length; i++) {
     if (points[i][1] <= points[i - 1][1]) points[i][1] = points[i - 1][1] + 1;
   }
-  return points;
+  // 抽稀：换算靠插值，不需要每分一个点。每 5 分取一个 + 本科线±10范围保留密集
+  const dense = [];
+  for (let i = 0; i < points.length; i++) {
+    const [s] = points[i];
+    const nearBatch = Math.abs(s - batchScore) <= 10;
+    if (i === 0 || i === points.length - 1 || s % 5 === 0 || nearBatch) {
+      dense.push(points[i]);
+    }
+  }
+  return dense;
 }
 
 // 各年省控线（代表性校准，逐年微调）
