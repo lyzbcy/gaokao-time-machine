@@ -248,7 +248,7 @@ function build() {
   const result = {
     _meta: {
       generatedAt: new Date().toISOString(),
-      note: '学校字典：985/211为公开固定名单精确标注，其余本科/专科层次为启发式推断。覆盖20省代表性院校。',
+      note: '学校字典：985/211为公开固定名单精确标注，其余本科/专科层次为启发式推断。覆盖31省代表性院校。',
       years: [2019, 2020, 2021, 2022, 2023, 2024, 2025],
       tierLegend: { '985':'985','211':'211','1':'一本','2':'二本','3':'专科' },
       provinces: Object.keys(BIZ_PROVINCES).map(c => ({ code: c, name: BIZ_PROVINCES[c] })),
