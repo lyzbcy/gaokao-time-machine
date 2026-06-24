@@ -10,6 +10,9 @@ const HomePage = (function () {
   // 作者联系方式（学校数据缺失时引导用户）
   const AUTHOR_CONTACT = 'https://lyzbcy.github.io/gaokao-time-machine/#/about';
 
+  // 选中的学校所属省份（跨省搜索时记录，开盒时用该校所在省的分数线）
+  let selectedSchoolProv = null;
+
   function render() {
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -182,11 +185,25 @@ const HomePage = (function () {
       dd.classList.add('hidden');
       return;
     }
-    // 模糊匹配校名（包含即命中，最多 12 条）
+    // 模糊匹配校名（跨省全局搜索，本省优先，最多 12 条）
     const tierLabel = { '985': '985', '211': '211', '1': '一本', '2': '二本', '3': '专科' };
-    const matches = provData.schools
+    // 1. 本省匹配（优先显示）
+    const localMatches = provData.schools
       .filter(s => s.name.toLowerCase().includes(q))
-      .slice(0, 12);
+      .map(s => ({ ...s, provCode: prov, provName: provData.name, isLocal: true }));
+    // 2. 跨省匹配（补足，去重）
+    const localNames = new Set(localMatches.map(s => s.name));
+    const crossMatches = [];
+    for (const code in SCORE_DATA.provinces) {
+      if (code === prov) continue;
+      for (const s of SCORE_DATA.provinces[code].schools) {
+        if (!localNames.has(s.name) && s.name.toLowerCase().includes(q)) {
+          crossMatches.push({ ...s, provCode: code, provName: SCORE_DATA.provinces[code].name, isLocal: false });
+          localNames.add(s.name);
+        }
+      }
+    }
+    const matches = [...localMatches, ...crossMatches].slice(0, 12);
 
     if (matches.length === 0) {
       // 未匹配：友好提示
@@ -207,10 +224,13 @@ const HomePage = (function () {
     matches.forEach(s => {
       const item = document.createElement('div');
       item.className = 'school-item';
-      item.innerHTML = `<span class="school-name">${highlight(s.name, q)}</span><span class="school-tier tag-${s.tier}">${tierLabel[s.tier] || s.tier}</span>`;
+      const provTag = s.isLocal ? '' : `<span class="school-prov">${s.provName}</span>`;
+      item.innerHTML = `<span class="school-name">${highlight(s.name, q)}${provTag}</span><span class="school-tier tag-${s.tier}">${tierLabel[s.tier] || s.tier}</span>`;
       item.addEventListener('mousedown', e => {
-        e.preventDefault(); // 防止 input blur 先触发
+        e.preventDefault();
         document.getElementById('f-school').value = s.name;
+        // 记录该校所属省份（跨省校开盒时用这个省的分数线）
+        selectedSchoolProv = s.provCode;
         dd.classList.add('hidden');
         onSchoolInput();
       });
@@ -268,6 +288,7 @@ const HomePage = (function () {
     // 选省份变化时重置学校输入、隐藏下拉、隐藏自定义框
     const schoolInput = document.getElementById('f-school');
     schoolInput.value = '';
+    selectedSchoolProv = null;
     document.getElementById('schoolDropdown')?.classList.add('hidden');
     onSchoolInput();
   }
@@ -309,13 +330,15 @@ const HomePage = (function () {
       return;
     }
 
-    // V5：按需懒加载该省分数线（字典只有 name/tier，分数线在 scores/{code}.json）
+    // V5：按需懒加载分数线
+    // 优先加载"用户所在省"；若选了跨省校，加载"该校所在省"（box-engine 要在该省 schools 里找到它）
+    const loadProv = selectedSchoolProv || input.province;
     let provData;
     try {
       if (window.ScoreLoader) {
-        provData = await ScoreLoader.loadProvScores(input.province);
+        provData = await ScoreLoader.loadProvScores(loadProv);
       } else {
-        provData = SCORE_DATA.provinces[input.province];
+        provData = SCORE_DATA.provinces[loadProv];
       }
     } catch (e) {
       App.toast('该省数据加载失败，请重试～');

@@ -375,6 +375,16 @@ h1, h2, h3, .hero-title, .brand-name, .section-title, .label-title,
   padding: 2px 8px;
   border-radius: 6px;
 }
+.school-prov {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: #F0EBFA;
+  color: var(--text-light);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
 .school-tier.tag-985 { background: #FFE9B0; color: #B8860B; }
 .school-tier.tag-211 { background: #D6E4FF; color: #2563EB; }
 .school-tier.tag-1 { background: #D1FADF; color: #15803D; }
