@@ -10,10 +10,17 @@ const RankingPage = (function () {
 
   function render() {
     const app = document.getElementById('app');
+    // 后端连接状态徽章
+    const cloudOn = window.SupabaseConfig && SupabaseConfig.isReady && SupabaseConfig.isReady();
+    const badge = cloudOn
+      ? '<span class="cloud-badge on">☁️ 已连接云端 · 全网实时同步</span>'
+      : '<span class="cloud-badge off">📱 单机模式 · 仅本地数据</span>';
+
     app.innerHTML = `
       <section class="hero" style="padding-top:8px">
         <h1 class="hero-title" style="font-size:22px">🏆 全网排行榜</h1>
         <p class="hero-sub">看看大家都在抽什么标签</p>
+        ${badge}
       </section>
 
       <div class="rank-tabs">

@@ -80,6 +80,7 @@ const HomePage = (function () {
           <span>🔮 开 盒</span>
         </button>
         <p class="muted text-center mt-8">已有 <b id="totalCount">0</b> 人开过盒</p>
+        <p class="text-center" id="homeCloudBadge"></p>
       </section>
 
       <!-- 今日标签排行榜 -->
@@ -292,6 +293,15 @@ const HomePage = (function () {
       const el = document.getElementById('totalCount');
       if (el) el.textContent = n;
     });
+
+    // 后端连接状态徽章
+    const badgeEl = document.getElementById('homeCloudBadge');
+    if (badgeEl) {
+      const cloudOn = window.SupabaseConfig && SupabaseConfig.isReady && SupabaseConfig.isReady();
+      badgeEl.innerHTML = cloudOn
+        ? '<span class="cloud-badge on">☁️ 已连接云端 · 全网实时同步</span>'
+        : '<span class="cloud-badge off">📱 单机模式 · 仅本地数据</span>';
+    }
 
     // 今日排行榜
     try {
