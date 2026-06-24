@@ -42,6 +42,18 @@ const PROVINCES = {
   jl: { name: '吉林',   examinees: 180000, mode2026: 'new', batch2026: { phys本科: 345, phys特控: 470, hist本科: 385, hist特控: 490 } }, // 第四批2024（本科线偏低）
   bj: { name: '北京',   examinees: 120000, mode2026: 'new', batch2026: { general本科: 425, general特控: 510 } }, // 3+3
   sh: { name: '上海',   examinees: 110000, mode2026: 'new', batch2026: { general本科: 403, general特控: 503 } }, // 3+3（满分660，这里按比例调）
+  // 新增11省
+  nm: { name: '内蒙古', examinees: 220000, mode2026: 'new', batch2026: { phys本科: 370, phys特控: 470, hist本科: 410, hist特控: 490 } }, // 第四批2024
+  gx: { name: '广西',   examinees: 460000, mode2026: 'new', batch2026: { phys本科: 371, phys特控: 500, hist本科: 400, hist特控: 510 } }, // 第四批2024
+  hi: { name: '海南',   examinees: 130000, mode2026: 'new', batch2026: { general本科: 480, general特控: 540 } }, // 第二批3+3
+  gz: { name: '贵州',   examinees: 490000, mode2026: 'new', batch2026: { phys本科: 380, phys特控: 480, hist本科: 440, hist特控: 510 } }, // 第四批2024
+  yn: { name: '云南',   examinees: 380000, mode2026: 'old', batch2026: { science本科一批: 520, science本科二批: 440, arts本科一批: 540, arts本科二批: 465 } }, // 第五批2025(老高考)
+  gs: { name: '甘肃',   examinees: 260000, mode2026: 'new', batch2026: { phys本科: 370, phys特控: 470, hist本科: 400, hist特控: 500 } }, // 第四批2024
+  qh: { name: '青海',   examinees: 120000, mode2026: 'old', batch2026: { science本科一批: 400, science本科二批: 360, arts本科一批: 420, arts本科二批: 380 } }, // 第五批2025(老高考)
+  nx: { name: '宁夏',   examinees: 150000, mode2026: 'old', batch2026: { science本科一批: 430, science本科二批: 380, arts本科一批: 490, arts本科二批: 430 } }, // 第五批2025(老高考)
+  xj: { name: '新疆',   examinees: 230000, mode2026: 'old', batch2026: { science本科一批: 400, science本科二批: 350, arts本科一批: 420, arts本科二批: 370 } }, // 老高考
+  tj: { name: '天津',   examinees: 130000, mode2026: 'new', batch2026: { general本科: 475, general特控: 540 } }, // 第二批3+3
+  xz: { name: '西藏',   examinees: 100000, mode2026: 'old', batch2026: { science本科一批: 400, science本科二批: 315, arts本科一批: 420, arts本科二批: 330 } }, // 老高考
 };
 
 const YEARS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
@@ -53,8 +65,10 @@ const TRANSITION_YEAR = {
   hb: 2021, hn: 2021, zj: 2017, he: 2021, ah: 2024,
   cq: 2021, fj: 2021, ln: 2021,             // 第三批
   jx: 2024, hl: 2024, jl: 2024,             // 第四批
-  sx: 2025, sn: 2025,                       // 第五批（老高考口径，2025起物理历史）
-  bj: 2017, sh: 2017,                       // 第二批 3+3
+  nm: 2024, gx: 2024, gz: 2024, gs: 2024,   // 第四批（新增）
+  sx: 2025, sn: 2025, yn: 2025, qh: 2025, nx: 2025, // 第五批（老→新，2025起物理历史）
+  xj: 2100, xz: 2100,                       // 仍为老高考（暂未改革）
+  bj: 2017, sh: 2017, hi: 2020, tj: 2020,   // 3+3（海南天津第二批2020）
 };
 
 // 确定性随机
@@ -178,8 +192,8 @@ function batchLinesFor(code, year, track) {
 }
 
 function trackFor(code, year) {
-  // 3+3 模式省份（全程 general 总分）：浙江、山东、北京、上海
-  if (code === 'zj' || code === 'sd' || code === 'bj' || code === 'sh') return ['general'];
+  // 3+3 模式省份（全程 general 总分）：浙江、山东、北京、上海、海南、天津
+  if (code === 'zj' || code === 'sd' || code === 'bj' || code === 'sh' || code === 'hi' || code === 'tj') return ['general'];
   const trans = TRANSITION_YEAR[code];
   const isNew = year >= trans;
   return isNew ? ['physics', 'history'] : ['science', 'arts'];
