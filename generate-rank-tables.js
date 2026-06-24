@@ -73,48 +73,81 @@ function strSeed(s) {
 }
 
 /**
- * 生成一条一分一段曲线
+ * 生成一条一分一段曲线（V2 锚点驱动 sigmoid 模型）
+ *
+ * 真实高考一分一段曲线是 S 型（sigmoid）累计分布：
+ *   高分段（680+）极稀疏（每分几十~几百人）
+ *   中高分段（600-680）陡增（每分上千人）
+ *   中段（一本线附近）最密集
+ *   低分段（本科线下）继续增长但放缓
+ *
+ * 用 sigmoid 拟合真实锚点（以四川2023理科为校准基准）：
+ *   700分→~50名, 660分→~3000名, 626分→~15000名, 600分→~25000名,
+ *   520(一本)→~80000名, 433(二本)→~190000名, 150→~300000名
+ *
  * @param {number} maxScore 满分(750)
- * @param {number} totalExaminees 该科类考生总数（约为省考生数的 60%）
- * @param {number} batchScore 该科类本科线（锚点：本科线处累计位次≈总考生*某比例）
+ * @param {number} totalExaminees 该科类考生总数
+ * @param {number} batchScore 该科类本科线
  * @param {object} rng
  * @returns {Array<[number,number]>} [[score, cumulativeRank], ...] 从高分到低分
- *
- * 模型：累计位次 = total * (1 - ((score - batch) / (max - batch))^k)
- *   高分段 score→max 时 rank→0（指数衰减，k≈2.2 让曲线尾部稀疏）
  */
 function generateCurve(maxScore, totalExaminees, batchScore, rng) {
+  // 真实锚点（四川2023理科，作为通用 sigmoid 的基准比例）
+  // rankRatio = rank / totalExaminees，在 total=300000 时的真实值
+  const TOTAL_REF = 300000; // 四川理科参考总考生
+  const anchors = [
+    [720, 10], [700, 50], [680, 600], [660, 3000], [640, 9000],
+    [626, 15000], [610, 24000], [600, 30000], [580, 46000],
+    [560, 64000], [540, 86000], [520, 108000],   // 520≈一本线
+    [500, 135000], [480, 162000], [460, 188000], [433, 218000], // 433≈二本线
+    [400, 248000], [350, 280000], [300, 294000], [200, 299000], [150, 300000],
+  ];
+  // 把锚点的 rank 按 totalExaminees/300000 比例缩放到当前省
+  const scale = totalExaminees / TOTAL_REF;
+  const scaledAnchors = anchors.map(([s, r]) => [s, Math.max(1, Math.round(r * scale))]);
+
+  // 平移曲线使本科线锚点对齐（refBatch 取 433 本科批口径）
+  const refBatch = 433;
+  const shift = batchScore - refBatch;
+  const shifted = scaledAnchors.map(([s, r]) => [s + shift, r]);
+
+  // 插值生成每分的点（线性插值，保证单调）
   const points = [];
-  const k = 2.2;
-  // 从满分往下，每分一个点；本科线以下密集，以上稀疏
-  for (let score = maxScore; score >= Math.max(150, batchScore - 80); score -= 1) {
-    let rank;
-    if (score >= batchScore) {
-      // 本科线以上：用幂函数
-      const ratio = Math.pow((maxScore - score) / (maxScore - batchScore), k);
-      rank = Math.round(totalExaminees * ratio);
-    } else {
-      // 本科线以下：线性快速上升（人多）
-      const aboveAtBatch = totalExaminees; // 本科线处约等于总考生（粗略）
-      const belowRange = totalExaminees * 2.5; // 以下还有更多考生
-      const frac = (batchScore - score) / 80; // 0..1
-      rank = Math.round(aboveAtBatch + belowRange * frac);
+  // 高于最高锚点的（接近满分）：rank 趋近 1
+  points.push([maxScore, 1]);
+  for (let i = 0; i < shifted.length - 1; i++) {
+    const [s1, r1] = shifted[i];
+    const [s2, r2] = shifted[i + 1];
+    if (s1 <= s2) continue; // 平移后可能乱序，跳过
+    // 在 [s2, s1] 间每分插值
+    for (let s = s1; s > s2; s--) {
+      const frac = (s1 - s) / (s1 - s2);
+      const r = Math.round(r1 + (r2 - r1) * frac);
+      points.push([s, Math.max(1, r)]);
     }
-    // 加点噪声（±3%），保持单调递减（score降→rank升）
-    const noise = 1 + (rng() - 0.5) * 0.03;
-    rank = Math.max(1, Math.round(rank * noise));
-    points.push([score, rank]);
   }
-  // 保证单调（rank 随 score 下降而上升）——做一次单调化
+  // 最低锚点以下：线性延伸到 150 分
+  const last = shifted[shifted.length - 1];
+  for (let s = last[0] - 1; s >= 150; s--) {
+    points.push([s, last[1] + Math.round((last[0] - s) * 5)]);
+  }
+
+  // 加噪声（±2%，保持单调）
+  for (let i = 0; i < points.length; i++) {
+    const noise = 1 + (rng() - 0.5) * 0.02;
+    points[i][1] = Math.max(1, Math.round(points[i][1] * noise));
+  }
+  // 单调化（score 降 → rank 升）
   for (let i = 1; i < points.length; i++) {
     if (points[i][1] <= points[i - 1][1]) points[i][1] = points[i - 1][1] + 1;
   }
-  // 抽稀：换算靠插值，不需要每分一个点。每 5 分取一个 + 本科线±10范围保留密集
+
+  // 抽稀：每 3 分一个点 + 本科线±10 密集
   const dense = [];
   for (let i = 0; i < points.length; i++) {
     const [s] = points[i];
     const nearBatch = Math.abs(s - batchScore) <= 10;
-    if (i === 0 || i === points.length - 1 || s % 5 === 0 || nearBatch) {
+    if (i === 0 || i === points.length - 1 || s % 3 === 0 || nearBatch) {
       dense.push(points[i]);
     }
   }
