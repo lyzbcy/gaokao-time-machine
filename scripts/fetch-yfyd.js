@@ -102,6 +102,30 @@ const CONFIG = {
     { year: 2024, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shang_hai/dongtai/202406/t20240623_2618511.shtml' },
     { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/shang_hai/dongtai/202506/t20250623_2676341.shtml' },
   ]},
+  // ===== 第二批补全：2025 年真实表（2025-06/07 公布）=====
+  nm: { name: '内蒙古', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/nei_meng/dongtai/202506/t20250625_2676869.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/nei_meng/dongtai/202506/t20250625_2676868.shtml' },
+  ]},
+  gx: { name: '广西', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/guang_xi/dongtai/202506/t20250625_2677014.shtml' },
+  ]},
+  hi: { name: '海南', pages: [
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/hai_nan/dongtai/202507/t20250702_2678468.shtml' },
+  ]},
+  yn: { name: '云南', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/yun_nan/dongtai/202507/t20250701_2678266.shtml' },
+  ]},
+  gs: { name: '甘肃', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/gan_su/dongtai/202507/t20250702_2678474.shtml' },
+  ]},
+  qh: { name: '青海', pages: [
+    { year: 2025, track: 'physics', trackLabel: '物理类',   url: 'https://gaokao.eol.cn/qing_hai/dongtai/202506/t20250625_2677001.shtml' },
+    { year: 2025, track: 'history', trackLabel: '历史类',   url: 'https://gaokao.eol.cn/qing_hai/dongtai/202506/t20250625_2677002.shtml' },
+  ]},
+  tj: { name: '天津', pages: [
+    { year: 2025, track: 'general', trackLabel: '总分',     url: 'https://gaokao.eol.cn/tian_jin/dongtai/202506/t20250623_2676457.shtml' },
+  ]},
 };
 
 // ---------- CLI ----------
@@ -118,17 +142,27 @@ function parseArgs() {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ---------- Playwright 抓取 + 解析 ----------
-async function fetchTable(url) {
-  // 动态加载 playwright（全局安装位置）
+// eol.cn 国内访问慢且不稳（ERR_NETWORK_CHANGED / 超时常见），
+// 所以用全局复用的 browser + 每个 URL 最多 3 次重试 + 指数退避。
+let _browser = null;
+async function getBrowser() {
+  if (_browser) return _browser;
   const { createRequire } = require('module');
   const gReq = createRequire('C:\\Users\\24676\\AppData\\Roaming\\npm\\node_modules\\');
   const { chromium } = gReq('playwright');
+  _browser = await chromium.launch();
+  return _browser;
+}
 
-  const browser = await chromium.launch();
+// 单次抓取（不含重试）。出错时关闭出错的 page，但保留 browser 给下次复用。
+async function fetchTableOnce(url) {
+  const browser = await getBrowser();
   const page = await browser.newPage();
   try {
-    const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
-    if (!res || !res.ok) { await browser.close(); return { error: 'HTTP ' + (res ? res.status() : 'no response') }; }
+    const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 40000 });
+    if (!res || !res.ok) return { error: 'HTTP ' + (res ? res.status() : 'no response') };
+    // 等表格渲染（部分页面表格异步注入）
+    await page.waitForSelector('table', { timeout: 10000 }).catch(() => {});
 
     // 解析表格：分数 | 人数 | 累计人数
     const rows = await page.evaluate(() => {
@@ -142,13 +176,29 @@ async function fetchTable(url) {
       }
       return out;
     });
-    await browser.close();
     if (!rows || rows.length === 0) return { error: '未找到表格' };
     return { rows };
-  } catch (e) {
-    await browser.close();
-    return { error: e.message };
+  } finally {
+    await page.close().catch(() => {});
   }
+}
+
+// 带重试的抓取：最多 MAX 次指数退避
+async function fetchTable(url, retries = 3) {
+  let lastErr = '';
+  for (let i = 0; i < retries; i++) {
+    if (i > 0) {
+      const wait = 3000 * Math.pow(2, i - 1); // 3s, 6s, 12s
+      console.log(`  ⏳ 第${i + 1}次重试（等待 ${wait / 1000}s）...`);
+      await sleep(wait);
+    }
+    const r = await fetchTableOnce(url);
+    if (!r.error) return r;
+    lastErr = r.error;
+    // 网络抖动类错误才重试；HTTP 4xx 不重试
+    if (/HTTP 4\d\d/.test(lastErr)) break;
+  }
+  return { error: lastErr };
 }
 
 // 把 HTML 表格行转成 points [[score, rank], ...]
@@ -220,6 +270,7 @@ async function main() {
     console.log(`\n[dry-run 或无成功] 本次 ${stats.ok} 个，未写文件`);
   }
   console.log(`成功 ${stats.ok} / 失败 ${stats.fail}`);
+  if (_browser) await _browser.close().catch(() => {});
 }
 
 function applyToRankData(rankData, code, year, track, points, trackLabel) {
