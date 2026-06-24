@@ -57,7 +57,7 @@ const HomePage = (function () {
           <label>🎓 当年录取的学校（选填，输入搜索）</label>
           <div class="school-search">
             <input class="input" id="f-school" autocomplete="off"
-                   placeholder="输入校名搜索，如「江南」「清华」">
+                   placeholder="输入校名搜索，如「江南大学」">
             <div class="school-dropdown hidden" id="schoolDropdown"></div>
           </div>
           <span class="muted" style="font-size:11px">从列表选会自动带出该校历年数据；搜不到可自定义录入（需补2026预计分）</span>
