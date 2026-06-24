@@ -119,7 +119,11 @@ const HomePage = (function () {
 
   function fillOptions() {
     const provSel = document.getElementById('f-province');
-    for (const code in SCORE_DATA.provinces) {
+    // 按拼音首字母排序省份
+    const codes = Object.keys(SCORE_DATA.provinces).sort((a, b) => {
+      return (SCORE_DATA.provinces[a].name).localeCompare(SCORE_DATA.provinces[b].name, 'zh-Hans-CN');
+    });
+    for (const code of codes) {
       const p = SCORE_DATA.provinces[code];
       const opt = document.createElement('option');
       opt.value = code;
