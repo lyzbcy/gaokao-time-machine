@@ -15,8 +15,8 @@
 const SupabaseConfig = (function () {
 
   // ====== 在这里填你的 Supabase 凭据 ======
-  const SUPABASE_URL = '';        // 例：'https://xxxxx.supabase.co'
-  const SUPABASE_ANON_KEY = '';   // 例：'eyJhbGciOi...'
+  const SUPABASE_URL = 'https://qqytocmcgcpjwkehhacg.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_SbX35i4FZ92fdB1YgmY4ug_Au-B5Cf1';
   // ========================================
 
   const TABLE = 'box_records';
