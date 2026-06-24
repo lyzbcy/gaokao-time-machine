@@ -148,8 +148,54 @@ const RankConverter = (function () {
     };
   }
 
+  /**
+   * 直接用用户输入的真实位次换算（推荐，信任用户输入）
+   * 不经过 scoreToRank 反查——反查会被模型曲线误差污染。
+   * @param {number} rank 用户输入的真实全省排名
+   * @param {string} provinceCode
+   * @param {number} fromYear
+   * @param {string} track
+   * @param {number} targetYear
+   */
+  function convertByRank(rank, provinceCode, fromYear, track, targetYear = 2026) {
+    if (!rank || rank < 1) {
+      return { error: '排名无效', rank: null, equivalentScore: null };
+    }
+
+    // 目标年的 track（口径切换）
+    let targetTrack = track;
+    const targetTracks = tracksFor(provinceCode, targetYear);
+    if (targetTracks.indexOf(track) === -1) {
+      if (track === 'science') targetTrack = targetTracks.indexOf('physics') !== -1 ? 'physics' : targetTracks[0];
+      else if (track === 'arts') targetTrack = targetTracks.indexOf('history') !== -1 ? 'history' : targetTracks[0];
+      else targetTrack = targetTracks[0];
+    }
+
+    const targetTable = getTable(provinceCode, targetYear, targetTrack);
+    if (!targetTable) {
+      return { error: '无目标年数据', rank, equivalentScore: null };
+    }
+
+    const equivalentScore = rankToScore(rank, targetTable.points);
+    const fromTable = getTable(provinceCode, fromYear, track);
+
+    return {
+      rank, // 原样回传用户输入，绝不覆盖
+      equivalentScore,
+      fromTrack: track,
+      fromTrackLabel: trackLabel(track),
+      targetTrack,
+      targetTrackLabel: trackLabel(targetTrack),
+      fromBatchLine: fromTable ? fromTable.batchLine : null,
+      targetBatchLine: targetTable.batchLine,
+      source: targetTable.source,
+      detail: `你当年全省第${rank.toLocaleString()}名（${trackLabel(track)}），同位次在${targetYear}年（${trackLabel(targetTrack)}）约${equivalentScore}分`,
+    };
+  }
+
   return {
     convert,
+    convertByRank,
     scoreToRank,
     rankToScore,
     getTable,

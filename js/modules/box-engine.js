@@ -122,35 +122,57 @@ const BoxEngine = (function () {
   function open(input, provinceData) {
     const TARGET = 2026;
 
-    // 0. 位次锚定换算：用户当年分数 → 当年位次 → 2026 等位分
-    let equivalentScore2026 = input.score; // 兜底：换算失败时退化为同分（旧逻辑）
+    // 0. 位次锚定换算：直接用用户输入的真实全省排名换算 2026 等位分
+    //    ⚠️ 信任用户输入的 rank，绝不用模型反查覆盖（反查会被曲线误差污染）
+    let equivalentScore2026 = input.score; // 兜底：换算失败时退化为同分
     let conversion = null;
-    let oldRankByTable = input.rank;
-    if (window.RankConverter && input.score && input.track) {
-      conversion = RankConverter.convert(
-        input.score, input.province, input.year, input.track, TARGET
+    if (window.RankConverter && input.rank && input.track) {
+      conversion = RankConverter.convertByRank(
+        input.rank, input.province, input.year, input.track, TARGET
       );
       if (conversion && conversion.equivalentScore != null) {
         equivalentScore2026 = conversion.equivalentScore;
       }
-      if (conversion && conversion.rank != null) {
-        oldRankByTable = conversion.rank; // 用表查出的位次更准
-      }
     }
 
-    // 1. 算当年档次（用户选的院校，或分数推断）
+    // 判定基准分：优先用专业分（用户填了就按专业判），否则用总分
+    const oldJudgeScore = input.majorScore || input.score;
+    const newJudgeScore = input.majorScore
+      ? (input.majorScore - input.score + equivalentScore2026) // 专业分跟随等位分平移
+      : equivalentScore2026;
+
+    // 1. 算当年档次
     let oldTier;
+    const knownSch = input.chosenSchool ? provinceData.schools.find(s => s.name === input.chosenSchool) : null;
     if (input.chosenTier) {
       oldTier = input.chosenTier;
-    } else if (input.chosenSchool) {
-      const sch = provinceData.schools.find(s => s.name === input.chosenSchool);
-      oldTier = sch ? sch.tier : tierForScore(input.score, provinceData, input.year);
+    } else if (knownSch) {
+      oldTier = knownSch.tier; // 列表内校：用已知档次
     } else {
-      oldTier = tierForScore(input.score, provinceData, input.year);
+      oldTier = tierForScore(oldJudgeScore, provinceData, input.year); // 自定义校或未填：按分推断
     }
 
-    // 2. 算 2026 等位分能上的档次（核心改动：用 equivalentScore2026 而非 input.score）
-    const newTier = tierForScore(equivalentScore2026, provinceData, TARGET, true);
+    // 2. 算 2026 档次
+    let newTier;
+    if (input.chosenSchool && input.custom2026 != null) {
+      // 自定义校：用户录入的2026分直接决定能否上（>= 能上，按 custom2026 所处档次定）
+      newTier = tierForScore(input.custom2026, provinceData, TARGET, true);
+      // 若等位分 >= custom2026，说明今年同位次还能上这校（档次不变）；否则掉档
+      if (newJudgeScore < input.custom2026) {
+        // 今年同位次分不够该校，按等位分推断能上的档次
+        newTier = tierForScore(newJudgeScore, provinceData, TARGET, true);
+      }
+    } else if (knownSch) {
+      // 列表内校：看等位分是否还够该校2026预测分
+      const p = Predictor.predictSchool(knownSch, TARGET);
+      if (p.predicted2026 != null && newJudgeScore >= p.predicted2026) {
+        newTier = knownSch.tier; // 还能上，档次不变
+      } else {
+        newTier = tierForScore(newJudgeScore, provinceData, TARGET, true);
+      }
+    } else {
+      newTier = tierForScore(newJudgeScore, provinceData, TARGET, true);
+    }
 
     // 3. 档次变化
     const oldRank = TIER_RANK[oldTier] || 0;
@@ -190,8 +212,16 @@ const BoxEngine = (function () {
       // V2 新增：位次锚定换算结果（透传给前端展示）
       equivalentScore2026,
       conversion,
-      provinceRank: oldRankByTable, // 全省位次
+      provinceRank: input.rank, // 全省位次：直接用用户输入的真实值
       track: input.track,
+      // 专业分判定（V3）：用户填了专业分则按专业判
+      judgeByMajor: !!input.majorScore,
+      oldJudgeScore,
+      newJudgeScore,
+      // 自定义校（V3）：用户录入的2026分
+      customSchool: !!(input.chosenSchool && input.custom2026 != null),
+      customSchoolName: input.chosenSchool,
+      custom2026: input.custom2026,
     };
 
     // 7. 先查隐藏款

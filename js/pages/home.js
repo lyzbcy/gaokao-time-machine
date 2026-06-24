@@ -51,14 +51,28 @@ const HomePage = (function () {
         </div>
 
         <div class="input-row">
-          <label>🎓 当年录取的学校（选填，专业仅展示）</label>
-          <select class="select" id="f-school">
-            <option value="">不填就按分数推算</option>
-          </select>
+          <label>🎓 当年录取的学校（选填，可输入筛选）</label>
+          <input class="input" id="f-school" list="schoolList" autocomplete="off"
+                 placeholder="输入校名筛选，或直接填列表外的学校">
+          <datalist id="schoolList"></datalist>
+          <span class="muted" style="font-size:11px">从列表选会自动带出该校历年数据；填列表外的自定义学校需补「2026预计录取分」</span>
         </div>
+
+        <div class="input-row" id="customSchoolRow" style="display:none">
+          <label>🔢 自定义学校的 2026 预计录取分 <span style="color:var(--pink)">*</span></label>
+          <input class="input" id="f-custom2026" type="number" min="0" max="750"
+                 placeholder="比如 590（用于判定今年还能不能上）">
+          <span class="muted" style="font-size:11px">列表外学校没有历年数据，需手动录入今年预测分</span>
+        </div>
+
         <div class="input-row">
-          <label>📖 专业名（选填，仅结果页展示）</label>
+          <label>📖 专业名（选填，参与判定）</label>
           <input class="input" id="f-major" type="text" placeholder="比如 计算机科学与技术">
+        </div>
+        <div class="input-row" id="majorScoreRow" style="display:none">
+          <label>🎯 该专业当年录取分（选填，用于专业级判定）</label>
+          <input class="input" id="f-majorScore" type="number" min="0" max="750"
+                 placeholder="比如 595（填了按专业分判，不填按学校分判）">
         </div>
 
         <button class="open-btn" id="openBtn">
@@ -116,12 +130,35 @@ const HomePage = (function () {
         if (e.key === 'Enter') onOpen();
       });
     });
-    // 省份/年份变化 → 联动刷新科类选项
+    // 省份/年份变化 → 联动刷新科类 + 学校列表
     document.getElementById('f-province').addEventListener('change', updateTrackAndSchools);
     document.getElementById('f-year').addEventListener('change', updateTrackAndSchools);
+    // 学校输入变化 → 判断是自定义（列表外）→ 显示2026分数输入框
+    document.getElementById('f-school').addEventListener('input', onSchoolInput);
+    document.getElementById('f-school').addEventListener('change', onSchoolInput);
+    // 专业名输入 → 显示专业分输入框
+    document.getElementById('f-major').addEventListener('input', e => {
+      const row = document.getElementById('majorScoreRow');
+      if (row) row.style.display = e.target.value.trim() ? '' : 'none';
+    });
   }
 
-  // 根据所选省份+年份，刷新科类下拉（文理/物理历史/总分）
+  // 判断输入的学校是否在列表内（自定义校）
+  function isCustomSchool(provData, name) {
+    if (!name || !provData) return false;
+    return !provData.schools.some(s => s.name === name);
+  }
+
+  function onSchoolInput() {
+    const prov = document.getElementById('f-province').value;
+    const provData = SCORE_DATA.provinces[prov];
+    const name = document.getElementById('f-school').value.trim();
+    const customRow = document.getElementById('customSchoolRow');
+    const isCustom = name && isCustomSchool(provData, name);
+    if (customRow) customRow.style.display = isCustom ? '' : 'none';
+  }
+
+  // 根据所选省份+年份，刷新科类下拉 + 学校 datalist
   function updateTrackAndSchools() {
     const prov = document.getElementById('f-province').value;
     const year = parseInt(document.getElementById('f-year').value, 10);
@@ -145,18 +182,21 @@ const HomePage = (function () {
       trackSel.appendChild(opt);
     });
 
-    // 刷新学校下拉
-    const schoolSel = document.getElementById('f-school');
-    schoolSel.innerHTML = '<option value="">不填就按分数推算</option>';
+    // 刷新学校 datalist（可输入筛选）
+    const list = document.getElementById('schoolList');
+    list.innerHTML = '';
     const provData = SCORE_DATA.provinces[prov];
     if (provData) {
       provData.schools.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.name;
-        opt.textContent = `${s.name}（${{ '985': '985', '211': '211', '1': '一本', '2': '二本' }[s.tier] || s.tier}）`;
-        schoolSel.appendChild(opt);
+        opt.label = `${{ '985': '985', '211': '211', '1': '一本', '2': '二本' }[s.tier] || s.tier}`;
+        list.appendChild(opt);
       });
     }
+    // 选省份变化时重置学校输入和自定义框
+    document.getElementById('f-school').value = '';
+    onSchoolInput();
   }
 
   function validate() {
@@ -165,17 +205,24 @@ const HomePage = (function () {
     const track = document.getElementById('f-track').value;
     const score = parseInt(document.getElementById('f-score').value, 10);
     const rank = parseInt(document.getElementById('f-rank').value, 10);
-    const school = document.getElementById('f-school').value || undefined;
+    const school = document.getElementById('f-school').value.trim() || undefined;
     const major = document.getElementById('f-major').value.trim() || undefined;
+    const majorScore = parseInt(document.getElementById('f-majorScore').value, 10) || undefined;
+    const custom2026 = parseInt(document.getElementById('f-custom2026').value, 10) || undefined;
 
     if (!prov) { App.toast('请先选省份～'); return null; }
     if (!year) { App.toast('请选你的高考年份～'); return null; }
     if (!track) { App.toast('请选科类（文理/物理历史/总分）～'); return null; }
     if (!score || score < 0 || score > 750) { App.toast('分数填得不对哦（0-750）～'); return null; }
     if (!rank || rank < 1) { App.toast('请填全省排名（位次比分数更准）～'); return null; }
+    // 自定义学校必须填 2026 预计分
+    if (school && isCustomSchool(SCORE_DATA.provinces[prov], school) && (!custom2026 || custom2026 < 0 || custom2026 > 750)) {
+      App.toast('你填的学校不在数据库，请补上「2026预计录取分」～');
+      return null;
+    }
     return {
       province: prov, provinceName: SCORE_DATA.provinces[prov].name,
-      year, score, rank, track, chosenSchool: school, major,
+      year, score, rank, track, chosenSchool: school, major, majorScore, custom2026,
     };
   }
 
@@ -206,6 +253,8 @@ const HomePage = (function () {
       track: input.track,
       trackLabel: RankConverter.trackLabel(input.track),
       major: input.major || '',
+      majorScore: input.majorScore || null,
+      chosenSchool: input.chosenSchool || '',
       equivalentScore2026: result.equivalentScore2026,
       timestamp: result.timestamp,
     };

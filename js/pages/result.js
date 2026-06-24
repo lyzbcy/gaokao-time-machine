@@ -61,10 +61,16 @@ const ResultPage = (function () {
           </thead>
           <tbody>
             <tr>
-              <td><b>分数</b></td>
+              <td><b>总分</b></td>
               <td>${input.score}</td>
               <td><b style="color:var(--orange)">${result.equivalentScore2026}</b> <span class="muted">等位分</span></td>
             </tr>
+            ${input.majorScore ? `
+            <tr>
+              <td><b>专业分${input.major ? '（'+input.major+'）' : ''}</b></td>
+              <td>${input.majorScore} <span class="muted">你填的</span></td>
+              <td><b style="color:var(--orange)">${result.newJudgeScore}</b> <span class="muted">等位专业分</span></td>
+            </tr>` : ''}
             <tr>
               <td><b>全省排名</b></td>
               <td>第 ${(result.provinceRank || input.rank).toLocaleString()} 名</td>
@@ -78,8 +84,13 @@ const ResultPage = (function () {
               <td><b>省份</b></td>
               <td colspan="2">${input.provinceName}</td>
             </tr>
+            ${input.chosenSchool ? `
             <tr>
-              <td><b>能上的档次</b></td>
+              <td><b>当年上的学校</b></td>
+              <td colspan="2">${input.chosenSchool}${result.customSchool ? ` <span class="muted">（自定义，2026预计 ${result.custom2026} 分）</span>` : ''}</td>
+            </tr>` : ''}
+            <tr>
+              <td><b>能上的档次</b>${result.judgeByMajor ? '<br><span class="muted" style="font-size:10px">按专业分判</span>' : ''}</td>
               <td>${tierTag(result.oldTier)}</td>
               <td>${tierTag(result.newTier)}</td>
             </tr>
