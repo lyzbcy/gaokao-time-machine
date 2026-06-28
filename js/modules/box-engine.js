@@ -94,8 +94,9 @@ const BoxEngine = (function () {
    * 判定隐藏款彩蛋
    */
   function checkEasterEgg(input) {
-    // 时空悖论：年份 >= 2026（用户在选 2026 当"当年"）
-    if (input.year >= 2026) {
+    // 时空悖论：年份 > 2026（用户穿越到未来）
+    // 注：2026 是本工具的基准年，选 2026 属于正常玩法（2026→2026 同年映射），不触发彩蛋
+    if (input.year > 2026) {
       return Labels.get('time_paradox');
     }
     // 平行宇宙：分数极端 + 特定省份年份组合（命中率约 0.5%）

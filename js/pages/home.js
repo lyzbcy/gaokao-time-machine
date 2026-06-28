@@ -34,7 +34,7 @@ const HomePage = (function () {
           <input class="input" id="f-year" list="yearList" autocomplete="off"
                  type="number" min="1977" max="2026" placeholder="比如 2015（可直接输入任意年份）">
           <datalist id="yearList">
-            <option value="2025"><option value="2024"><option value="2023"><option value="2022">
+            <option value="2026"><option value="2025"><option value="2024"><option value="2023"><option value="2022">
             <option value="2021"><option value="2020"><option value="2019"><option value="2018">
             <option value="2017"><option value="2016"><option value="2015"><option value="2010">
             <option value="2005"><option value="2000"><option value="1995"><option value="1990">
